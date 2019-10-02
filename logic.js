@@ -3,16 +3,19 @@ let board = {
   tileWidth: 16,
   tileHeight: 16,
   foodPositions: [],
+  foxDenPositions: [],
   season: 0
 };
+const FOX_DEN = 5;
 const GRASS_1 = 0;
 const GRASS_2 = 2;
 const GRASS_3 = 4;
-const grassArray = [GRASS_1, GRASS_2, GRASS_3];
+const grassArray = [GRASS_1, GRASS_2, GRASS_3, FOX_DEN];
 const canvas = document.getElementById("myCanvas");
 const ctx = canvas.getContext("2d");
 const backgroundCanvas = document.getElementById("background");
 const backGroundCtx = backgroundCanvas.getContext("2d");
+let foxId = 25;
 
 let bunnyId = 30;
 
@@ -29,39 +32,72 @@ grassImg.onload = () => {
   renderBackground();
   startGame();
 };
-let Animal = function(animalType, x, y, id, color, speedModifier) {
-  this.preyEaten = 0;
+let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
   this.animalType = animalType;
   this.id = id;
   this.col = x;
   this.row = y;
   this.speedModifier = speedModifier;
   this.color = color;
-  this.moveCounter = 0;
-  this.timeAlive = 0;
-  this.max = 50;
+
   this.state = "idle";
-  this.hunger = 0;
-  this.foxHungry = true;
-  this.maxHunger = randomNumber(500, 2000);
-  this.starvation = randomNumber(2000, 2100);
-  this.currentDirection = "left";
+
+  //Max pops
+  this.max = 50;
+  this.reevaluate = false;
+
+  this.maxHunger = randomNumber(2000, 3000);
+  this.starvation = randomNumber(4000, 4500);
+
+  this.currentDirection = direction;
   this.upOrDown = "up";
-  this.multiplyTime = 500;
+
   this.foodSearch = false;
-  this.gestationTime = 0;
-  this.eating = 0;
   this.foodToSplice = null;
 
+  //Counter variables for bunny
+  this.babyTime = 0;
+  this.eating = 0;
+  this.multiplyTime = 500;
+
+  //Counter variables for fox
+  this.preyEaten = 0;
+  this.denCounter = 0;
+
+  //Counter variables for all
+  this.moveCounter = 0;
+  this.timeAlive = 0;
+  this.idleTime = 0;
+  this.hunger = 0;
+
+  //pathing objects for different animals
   this.closestFood = {
     x: null,
     y: null
   };
+
+  this.denPath = {
+    x: null,
+    y: null
+  };
+
+  //Function called every time the startGame interval is called
   this.stateManager = function() {
+    console.log(this.state);
+    if (this.animalType === "fox") {
+      console.log(this.state);
+    }
     if (this.state === "idle") {
       this.move();
-    } else if (this.state === "hungry" && board.foodPositions.length > 0) {
-      this.pathForFood();
+    } else if (
+      this.state === "pathing" &&
+      board.foodPositions.length > 0 &&
+      this.animalType === "rabbit"
+    ) {
+      this.findFood();
+    }
+    if (this.state === "den" && this.animalType === "fox") {
+      this.multiply();
     }
 
     if (
@@ -71,11 +107,8 @@ let Animal = function(animalType, x, y, id, color, speedModifier) {
     ) {
       this.preyBunnies();
     }
-    if (this.state === "tired") {
-      this.returnToDen();
-    }
-    if (this.foodSearch && board.foodPositions.length > 0) {
-      this.findFood();
+    if (this.state === "hungry" && board.foodPositions.length > 0 && !this.reevaluate) {
+      this.pathForFood();
     }
     if (this.state == "dead") {
       this.die();
@@ -84,10 +117,14 @@ let Animal = function(animalType, x, y, id, color, speedModifier) {
     if (this.animalType === "rabbit") {
       this.detectBunny();
     }
+    if (this.animalType === "fox" && this.state === "tired") {
+      this.findDen();
+    }
+    if (this.animalType === "fox" && this.state === "pathing") {
+      this.returnToDen();
+    }
   };
-
-  this.returnToDen = function() {};
-
+  //Function for detecting bunnies nearby for makin babies
   this.detectBunny = function() {
     for (let i = 0; i < bunniesArray.length; i++) {
       if (bunniesArray[i].state !== "dead") {
@@ -104,8 +141,8 @@ let Animal = function(animalType, x, y, id, color, speedModifier) {
             this.row === bunniesArray[i].row &&
             this.id != bunniesArray[i].id)
         ) {
-          if (this.gestationTime > 400 && bunniesArray[i].gestationTime > 200) {
-            this.gestationTime = 0;
+          if (this.babyTime > 400 && bunniesArray[i].babyTime > 200) {
+            this.babyTime = 0;
 
             this.multiply();
           }
@@ -113,6 +150,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier) {
       }
     }
   };
+  //causes the animal to multiply
 
   this.multiply = function() {
     if (this.animalType === "rabbit") {
@@ -122,34 +160,129 @@ let Animal = function(animalType, x, y, id, color, speedModifier) {
           new Animal("rabbit", this.col + 5, this.row, bunnyId, "yellow", 20)
         );
       }
+    } else if (this.animalType === "fox") {
+      let dir = randomNumber(1, 2);
+      if (foxArray.length < 3) {
+        foxId++;
+        if (dir === 1) {
+          foxArray.push(
+            new Animal(
+              "fox",
+              this.col + 2,
+              this.row + 1,
+              foxId,
+              "yellow",
+              20,
+              "left"
+            )
+          );
+        } else {
+          foxArray.push(
+            new Animal(
+              "fox",
+              this.col + 2,
+              this.row + 1,
+              foxId,
+              "yellow",
+              20,
+              "right"
+            )
+          );
+        }
+        this.state = "idle";
+        this.preyEaten = 0;
+      }
     }
   };
-
+  //draws the animal to the canvas every frame
   this.draw = function() {
     if (this.animalType === "rabbit") {
       draw("image", bunnyImg, this.col, this.row);
-    } else if (this.animalType === "fox") {
+    } else if (this.animalType === "fox" && this.state != "den") {
       draw("image", foxImg, this.col, this.row);
     }
   };
+
+  //finds random path to den if fox
+  this.findDen = function() {
+    let randomIndex = randomNumber(0, board.foxDenPositions.length);
+
+    let randomArrayItem = board.foxDenPositions[randomIndex];
+
+    if (board.foxDenPositions[randomIndex].taken === false && board.foxDenPositions[randomNumber].xPos < 25) {
+      let y = randomArrayItem.xPos;
+      let x = randomArrayItem.yPos;
+      this.denPath.x = x;
+      this.denPath.y = y;
+      board.foxDenPositions[randomIndex].taken = true;
+
+      this.state = "pathing";
+    } 
+    
+  };
+  //paths to the above den
+  this.returnToDen = function() {
+    let possibleJumps = [];
+
+    if (
+      this.row + 1 < board.maxTiles &&
+      grassArray.includes(mapArray[this.row + 1][this.col])
+    ) {
+      possibleJumps.push("down");
+    }
+    if (
+      this.row - 1 > 0 &&
+      grassArray.includes(mapArray[this.row - 1][this.col])
+    ) {
+      possibleJumps.push("up");
+    }
+    if (grassArray.includes(mapArray[this.row][this.col + 1])) {
+      possibleJumps.push("right");
+    }
+    if (grassArray.includes(mapArray[this.row][this.col - 1])) {
+      possibleJumps.push("left");
+    }
+
+    this.moveCounter += 50;
+    console.log(this.denPath);
+    if (this.moveCounter > 100) {
+      if (this.row > this.denPath.y && possibleJumps.includes("up")) {
+        this.row -= 1;
+      } else if (this.row < this.denPath.y && possibleJumps.includes("down")) {
+        this.row += 1;
+      } else if (this.col > this.denPath.x && possibleJumps.includes("left")) {
+        this.col -= 1;
+      } else if (this.col < this.denPath.x && possibleJumps.includes("right")) {
+        this.col += 1;
+      } else if (
+        this.denPath.x + 1 === this.col ||
+        this.denPath.x - 1 === this.col ||
+        this.denPath.y + 1 === this.row ||
+        this.denPath.y - 1 === this.row
+      ) {
+        this.state = "den";
+      } else {
+        this.state = "tired";
+      }
+      this.moveCounter = 0;
+    }
+  };
+  //finds random berry node on map, saves it in obj
   this.findFood = function() {
     let randomIndex = randomNumber(0, board.foodPositions.length);
 
     let randomArrayItem = board.foodPositions[randomIndex];
 
-    if (board.foodPositions[randomIndex].taken === false) {
-      let y = randomArrayItem.xPos;
-      let x = randomArrayItem.yPos;
-      this.closestFood.x = x;
-      this.closestFood.y = y;
-      this.state = "hungry";
-
-      this.foodSearch = false;
-    }
+    let y = randomArrayItem.xPos;
+    let x = randomArrayItem.yPos;
+    this.closestFood.x = x;
+    this.closestFood.y = y;
+    this.foodToSplice = randomIndex;
+    this.state = "hungry";
 
     return;
   };
-
+  //pops from array
   this.die = function() {
     if (this.animalType === "rabbit") {
       bunniesArray = bunniesArray.filter(bunny => bunny.id != this.id);
@@ -175,14 +308,12 @@ let Animal = function(animalType, x, y, id, color, speedModifier) {
           this.col === bunniesArray[i].col) ||
         (this.row === bunniesArray[i].row && this.col === bunniesArray[i].col)
       ) {
-        console.log("IIIII", i);
-        console.log("GOTTEM -");
         this.preyEaten++;
         bunniesArray[i].state = "dead";
         bunniesArray = bunniesArray.filter(
           bunny => bunny.id !== bunniesArray[i].id
         );
-        if (this.preyEaten === 5) {
+        if (this.preyEaten === 1) {
           this.state = "tired";
         }
       }
@@ -209,9 +340,10 @@ let Animal = function(animalType, x, y, id, color, speedModifier) {
     if (grassArray.includes(mapArray[this.row][this.col - 1])) {
       possibleJumps.push("left");
     }
+    this.hunger++
+    this.babyTime++;
+    console.log(this.closestFood)
 
-    this.gestationTime++;
-    this.hunger += 1;
     this.moveCounter += 20;
     if (this.moveCounter > 100) {
       if (this.row > this.closestFood.y && possibleJumps.includes("up")) {
@@ -243,7 +375,6 @@ let Animal = function(animalType, x, y, id, color, speedModifier) {
           board.foodPositions.splice(this.foodToSplice, 1);
           mapArray[this.closestFood.y][this.closestFood.x] = 0;
           renderBackground();
-          console.log(board.foodPositions);
 
           this.state = "idle";
           this.hunger = 0;
@@ -251,9 +382,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier) {
         }
       } else if (this.hunger > this.starvation) {
         console.log("starved");
-        this.die();
+        this.state = "dead"
       } else {
-        this.state = "idle";
+        this.state = "idle"
       }
       this.moveCounter = 0;
     }
@@ -285,9 +416,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier) {
       }
       direction =
         possibleJumps[Math.floor(Math.random() * possibleJumps.length)];
-
+      this.idleTime += 1;
       this.hunger += 1;
-      this.gestationTime++;
+      this.babyTime++;
       this.moveCounter += 50;
       if (this.moveCounter > randomNumber(300, 400)) {
         switch (direction) {
@@ -306,15 +437,13 @@ let Animal = function(animalType, x, y, id, color, speedModifier) {
         }
 
         this.timeAlive++;
-        console.log(this.timeAlive)
-
-        if (this.timeAlive > randomNumber(1000, 2000)) {
+        if (this.timeAlive > randomNumber(100000, 50000000)) {
           console.log("died from age");
           this.state = "dead";
         }
         if (this.hunger > this.maxHunger && board.foodPositions.length > 1) {
           console.log("FOOD SEARCH");
-          this.foodSearch = true;
+          this.state = "pathing";
         }
         if (this.hunger > this.starvation) {
           console.log("STARVED");
@@ -322,7 +451,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier) {
         }
         this.moveCounter = 0;
       }
-    } else if (this.animalType === "fox") {
+    } else if (this.animalType === "fox" && this.state === "idle") {
       let possibleJumps = [];
 
       if (
@@ -344,7 +473,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier) {
         possibleJumps.push("left");
       }
 
-      this.moveCounter += 50;
+      this.moveCounter += 80;
       if (this.moveCounter > randomNumber(150, 200)) {
         if (
           possibleJumps.includes("left") &&
@@ -420,7 +549,7 @@ canvas.width = board.tileWidth * board.maxTiles;
 function randomNumber(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
-function draw(type, img = null, x, y, color, tile) {
+function draw(type, img = null, x, y, color, tile, row) {
   if (type == "rect") {
     backGroundCtx.fillStyle = color;
     backGroundCtx.fillRect(
@@ -447,7 +576,7 @@ function draw(type, img = null, x, y, color, tile) {
     backGroundCtx.drawImage(
       img,
       tile,
-      0,
+      row,
       16,
       16,
       x * board.tileWidth,
@@ -466,9 +595,10 @@ function createArray() {
     for (let y = 0; y < board.maxTiles; y++) {
       const rando = randomNumber(1, 1000);
 
-      if (rando <= 50) {
-        mapArray[x][y] = 1;
-      } else if (rando <= 60) {
+      if (rando <= 1) {
+        mapArray[x][y] = FOX_DEN;
+        board.foxDenPositions.push({ xPos: x, yPos: y, taken: false });
+      }  else if (rando <= 20) {
         mapArray[x][y] = 3;
         board.foodPositions.push({ xPos: x, yPos: y, taken: false, uses: 5 });
       } else if (rando <= 200) {
@@ -485,34 +615,57 @@ function createArray() {
 function renderBackground() {
   for (let y = 0; y < board.maxTiles; y++) {
     for (let x = 0; x < board.maxTiles; x++) {
-      switch (mapArray[y][x]) {
-        case GRASS_1:
-          draw("imageBack", grassImg, x, y, null, 16);
-          break;
-        case 1:
-          draw("imageBack", grassImg, x, y, null, 64);
-          break;
-        case GRASS_2:
-          draw("imageBack", grassImg, x, y, null, 0);
-          break;
-        case 3:
-          draw("imageBack", grassImg, x, y, null, 48);
-          break;
-        default:
-          draw("imageBack", grassImg, x, y, null, 32);
-          break;
+      if (board.season > 5000) {
+        switch (mapArray[y][x]) {
+          case GRASS_1:
+            draw("imageBack", grassImg, x, y, null, 16, 0);
+            break;
+          case 1:
+            draw("imageBack", grassImg, x, y, null, 64, 16);
+            break;
+          case GRASS_2:
+            draw("imageBack", grassImg, x, y, null, 0, 16);
+            break;
+          case 3:
+            draw("imageBack", grassImg, x, y, null, 48, 0);
+            break;
+          case FOX_DEN:
+            draw("imageBack", grassImg, x, y, null, 80, 0);
+            break;
+          default:
+            draw("imageBack", grassImg, x, y, null, 32, 16);
+            break;
+        }
+      } else {
+        switch (mapArray[y][x]) {
+          case GRASS_1:
+            draw("imageBack", grassImg, x, y, null, 16, 0);
+            break;
+          case 1:
+            draw("imageBack", grassImg, x, y, null, 64, 0);
+            break;
+          case GRASS_2:
+            draw("imageBack", grassImg, x, y, null, 0, 0);
+            break;
+          case 3:
+            draw("imageBack", grassImg, x, y, null, 48, 0);
+            break;
+          case FOX_DEN:
+            draw("imageBack", grassImg, x, y, null, 80, 0);
+            break;
+          default:
+            draw("imageBack", grassImg, x, y, null, 32, 0);
+            break;
+        }
       }
     }
   }
 }
 function renderHabitat() {
   for (let y = 0; y < board.maxTiles; y++) {
-    for (let x = 0; x < board.maxTiles; x++) {
-    }
+    for (let x = 0; x < board.maxTiles; x++) {}
   }
-
 }
-
 
 function addFood() {
   if (board.foodPositions.length < 50) {
@@ -563,7 +716,7 @@ let bunniesArray = [
     "rabbit",
     randomNumber(30, 40),
     randomNumber(5, 10),
-    1,
+    2,
     "yellow",
     20
   ),
@@ -571,7 +724,7 @@ let bunniesArray = [
     "rabbit",
     randomNumber(30, 40),
     randomNumber(5, 10),
-    1,
+    3,
     "yellow",
     20
   ),
@@ -579,7 +732,7 @@ let bunniesArray = [
     "rabbit",
     randomNumber(30, 40),
     randomNumber(5, 10),
-    1,
+    4,
     "yellow",
     20
   ),
@@ -587,20 +740,21 @@ let bunniesArray = [
     "rabbit",
     randomNumber(30, 40),
     randomNumber(5, 10),
-    1,
+    5,
     "yellow",
     20
   )
 ];
 let foxArray = [
-  new Animal(
-    "fox",
-    randomNumber(30, 40),
-    randomNumber(30, 40),
-    10,
-    "yellow",
-    20
-  )
+  // new Animal(
+  //   "fox",
+  //   randomNumber(30, 40),
+  //   randomNumber(30, 40),
+  //   10,
+  //   "yellow",
+  //   20,
+  //   "right"
+  // )
 ];
 
 function initialize(animal) {
@@ -624,9 +778,10 @@ function mainLoop() {
   initialize();
   board.season += 1;
 
-  if (board.season >= 10000) {
+  if (board.season === 5000) {
+    renderBackground();
   }
 }
 function startGame() {
-  setInterval(mainLoop, 10);
+  setInterval(mainLoop, 1);
 }
