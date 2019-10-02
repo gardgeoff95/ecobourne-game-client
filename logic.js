@@ -166,7 +166,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
       this.denCounter++;
       if (this.denCounter > 500) {
         let dir = randomNumber(1, 2);
-        if (foxArray.length < 3) {
+        if (foxArray.length < 20) {
           foxId++;
           if (dir === 1) {
             foxArray.push(
@@ -294,7 +294,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     if (this.animalType === "rabbit") {
       bunniesArray = bunniesArray.filter(bunny => bunny.id != this.id);
       console.log("another one bites the dust")
-      console.log(bunniesArray).length
+      console.log(bunniesArray.length)
     }
     // for (let i = 0; i < bunniesArray.length; i++) {
     //   if (this.id === bunniesArray[i].id) {
@@ -779,3 +779,28 @@ function mainLoop() {
 function startGame() {
   setInterval(mainLoop, 10);
 }
+
+
+
+//slider JS
+let visible = false;
+
+$("#showSliders").on("click", () => {
+
+  if ($("#showSliders").attr("clicked") == "false") {
+    console.log("HEY")
+    $("#sliders").css("visibility", "visible");
+    $("#sliders").animate({height: "500px"}, 500);
+    $("#showSliders").attr("clicked", "true")
+  } else {
+ 
+    $("#sliders").animate({height: "5px"}, 500, function() {
+      $("#sliders").css("visibility", "hidden");
+    });
+ 
+    $("#showSliders").attr("clicked", "false")
+
+  }
+  
+
+})
