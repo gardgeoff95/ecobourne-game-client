@@ -10,7 +10,7 @@ const FOX_DEN = 5;
 const GRASS_1 = 0;
 const GRASS_2 = 2;
 const GRASS_3 = 4;
-const grassArray = [GRASS_1, GRASS_2, GRASS_3, FOX_DEN];
+const grassArray = [GRASS_1, GRASS_2, GRASS_3];
 const canvas = document.getElementById("myCanvas");
 const ctx = canvas.getContext("2d");
 const backgroundCanvas = document.getElementById("background");
@@ -83,10 +83,8 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
 
   //Function called every time the startGame interval is called
   this.stateManager = function() {
-    console.log(this.state);
-    if (this.animalType === "fox") {
-      console.log(this.state);
-    }
+    
+ 
     if (this.state === "idle") {
       this.move();
     } else if (
@@ -107,7 +105,11 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     ) {
       this.preyBunnies();
     }
-    if (this.state === "hungry" && board.foodPositions.length > 0 && !this.reevaluate) {
+    if (
+      this.state === "hungry" &&
+      board.foodPositions.length > 0 &&
+      !this.reevaluate
+    ) {
       this.pathForFood();
     }
     if (this.state == "dead") {
@@ -161,36 +163,44 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         );
       }
     } else if (this.animalType === "fox") {
-      let dir = randomNumber(1, 2);
-      if (foxArray.length < 3) {
-        foxId++;
-        if (dir === 1) {
-          foxArray.push(
-            new Animal(
-              "fox",
-              this.col + 2,
-              this.row + 1,
-              foxId,
-              "yellow",
-              20,
-              "left"
-            )
-          );
+      this.denCounter++;
+      if (this.denCounter > 500) {
+        let dir = randomNumber(1, 2);
+        if (foxArray.length < 3) {
+          foxId++;
+          if (dir === 1) {
+            foxArray.push(
+              new Animal(
+                "fox",
+                this.col + 2,
+                this.row + 1,
+                foxId,
+                "yellow",
+                20,
+                "left"
+              )
+            );
+          } else {
+            foxArray.push(
+              new Animal(
+                "fox",
+                this.col + 2,
+                this.row + 1,
+                foxId,
+                "yellow",
+                20,
+                "right"
+              )
+            );
+          }
+          this.state = "idle";
+          this.preyEaten = 0;
+          this.denCounter = 0;
         } else {
-          foxArray.push(
-            new Animal(
-              "fox",
-              this.col + 2,
-              this.row + 1,
-              foxId,
-              "yellow",
-              20,
-              "right"
-            )
-          );
+          this.state = "idle";
+          this.preyEaten = 0;
+          this.denCounter = 0;
         }
-        this.state = "idle";
-        this.preyEaten = 0;
       }
     }
   };
@@ -209,16 +219,13 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
 
     let randomArrayItem = board.foxDenPositions[randomIndex];
 
-    if (board.foxDenPositions[randomIndex].taken === false && board.foxDenPositions[randomNumber].xPos < 25) {
-      let y = randomArrayItem.xPos;
-      let x = randomArrayItem.yPos;
-      this.denPath.x = x;
-      this.denPath.y = y;
-      board.foxDenPositions[randomIndex].taken = true;
+    let y = randomArrayItem.xPos;
+    let x = randomArrayItem.yPos;
+    this.denPath.x = x;
+    this.denPath.y = y;
+    board.foxDenPositions[randomIndex].taken = true;
 
-      this.state = "pathing";
-    } 
-    
+    this.state = "pathing";
   };
   //paths to the above den
   this.returnToDen = function() {
@@ -286,8 +293,8 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
   this.die = function() {
     if (this.animalType === "rabbit") {
       bunniesArray = bunniesArray.filter(bunny => bunny.id != this.id);
-      console.log("Bunnies array ", bunniesArray);
-      console.log("My id is ", this.id);
+      console.log("another one bites the dust")
+      console.log(bunniesArray).length
     }
     // for (let i = 0; i < bunniesArray.length; i++) {
     //   if (this.id === bunniesArray[i].id) {
@@ -313,7 +320,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         bunniesArray = bunniesArray.filter(
           bunny => bunny.id !== bunniesArray[i].id
         );
-        if (this.preyEaten === 1) {
+        if (this.preyEaten === 3) {
           this.state = "tired";
         }
       }
@@ -340,9 +347,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     if (grassArray.includes(mapArray[this.row][this.col - 1])) {
       possibleJumps.push("left");
     }
-    this.hunger++
+    this.hunger++;
     this.babyTime++;
-    console.log(this.closestFood)
+   
 
     this.moveCounter += 20;
     if (this.moveCounter > 100) {
@@ -382,9 +389,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         }
       } else if (this.hunger > this.starvation) {
         console.log("starved");
-        this.state = "dead"
+        this.state = "dead";
       } else {
-        this.state = "idle"
+        this.state = "idle";
       }
       this.moveCounter = 0;
     }
@@ -442,7 +449,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
           this.state = "dead";
         }
         if (this.hunger > this.maxHunger && board.foodPositions.length > 1) {
-          console.log("FOOD SEARCH");
+          
           this.state = "pathing";
         }
         if (this.hunger > this.starvation) {
@@ -593,12 +600,14 @@ function createArray() {
   }
   for (let x = 0; x < board.maxTiles; x++) {
     for (let y = 0; y < board.maxTiles; y++) {
-      const rando = randomNumber(1, 1000);
+      const rando = randomNumber(1, 2000);
 
       if (rando <= 1) {
         mapArray[x][y] = FOX_DEN;
         board.foxDenPositions.push({ xPos: x, yPos: y, taken: false });
-      }  else if (rando <= 20) {
+      } else if (rando <= 2) {
+        mapArray[x][y] = 1;
+      } else if (rando <= 20) {
         mapArray[x][y] = 3;
         board.foodPositions.push({ xPos: x, yPos: y, taken: false, uses: 5 });
       } else if (rando <= 200) {
@@ -727,34 +736,19 @@ let bunniesArray = [
     3,
     "yellow",
     20
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(30, 40),
-    randomNumber(5, 10),
-    4,
-    "yellow",
-    20
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(30, 40),
-    randomNumber(5, 10),
-    5,
-    "yellow",
-    20
   )
+
 ];
 let foxArray = [
-  // new Animal(
-  //   "fox",
-  //   randomNumber(30, 40),
-  //   randomNumber(30, 40),
-  //   10,
-  //   "yellow",
-  //   20,
-  //   "right"
-  // )
+  new Animal(
+    "fox",
+    randomNumber(30, 40),
+    randomNumber(30, 40),
+    10,
+    "yellow",
+    20,
+    "right"
+  )
 ];
 
 function initialize(animal) {
@@ -783,5 +777,5 @@ function mainLoop() {
   }
 }
 function startGame() {
-  setInterval(mainLoop, 1);
+  setInterval(mainLoop, 10);
 }
