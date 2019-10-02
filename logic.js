@@ -602,10 +602,10 @@ function createArray() {
     for (let y = 0; y < board.maxTiles; y++) {
       const rando = randomNumber(1, 2000);
 
-      if (rando <= 1) {
+      if (rando <= 2) {
         mapArray[x][y] = FOX_DEN;
         board.foxDenPositions.push({ xPos: x, yPos: y, taken: false });
-      } else if (rando <= 2) {
+      } else if (rando <= 5) {
         mapArray[x][y] = 1;
       } else if (rando <= 20) {
         mapArray[x][y] = 3;
@@ -624,7 +624,7 @@ function createArray() {
 function renderBackground() {
   for (let y = 0; y < board.maxTiles; y++) {
     for (let x = 0; x < board.maxTiles; x++) {
-      if (board.season > 5000) {
+      if (board.season > 12000) {
         switch (mapArray[y][x]) {
           case GRASS_1:
             draw("imageBack", grassImg, x, y, null, 16, 0);
@@ -772,7 +772,7 @@ function mainLoop() {
   initialize();
   board.season += 1;
 
-  if (board.season === 5000) {
+  if (board.season === 12000) {
     renderBackground();
   }
 }
