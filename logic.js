@@ -62,7 +62,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
   this.reevaluate = false;
 
   this.maxHunger = randomNumber(2000, 3000);
-  this.starvation = randomNumber(4000, 4500);
+  this.starvation = randomNumber(3000, 3100);
 
   this.currentDirection = direction;
   this.upOrDown = "up";
@@ -98,6 +98,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
 
   //Function called every time the startGame interval is called
   this.stateManager = function() {
+  
     
  
     if (this.state === "idle") {
@@ -181,7 +182,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
       this.denCounter++;
       if (this.denCounter > 500) {
         let dir = randomNumber(1, 2);
-        if (foxArray.length < 20) {
+        if (foxArray.length < 4) {
           foxId++;
           if (dir === 1) {
             foxArray.push(
@@ -266,7 +267,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     }
 
     this.moveCounter += 50;
-    console.log(this.denPath);
+   
     if (this.moveCounter > 100) {
       if (this.row > this.denPath.y && possibleJumps.includes("up")) {
         this.row -= 1;
@@ -308,8 +309,8 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
   this.die = function() {
     if (this.animalType === "rabbit") {
       bunniesArray = bunniesArray.filter(bunny => bunny.id != this.id);
-      console.log("another one bites the dust")
-      console.log(bunniesArray.length)
+      // console.log("another one bites the dust")
+      // console.log(bunniesArray.length)
     }
     // for (let i = 0; i < bunniesArray.length; i++) {
     //   if (this.id === bunniesArray[i].id) {
@@ -364,7 +365,11 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     }
     this.hunger++;
     this.babyTime++;
-   
+    this.timeAlive++;
+    if (this.timeAlive > randomNumber(2000, 3000)) {
+      console.log("died from age");
+      this.state = "dead";
+    }
 
     this.moveCounter += 20;
     if (this.moveCounter > 100) {
@@ -459,7 +464,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         }
 
         this.timeAlive++;
-        if (this.timeAlive > randomNumber(100000, 50000000)) {
+        if (this.timeAlive > randomNumber(2000, 3000)) {
           console.log("died from age");
           this.state = "dead";
         }
@@ -792,7 +797,7 @@ function mainLoop() {
   }
 }
 function startGame() {
-  setInterval(mainLoop, 10);
+  setInterval(mainLoop, 1);
 }
 
 
