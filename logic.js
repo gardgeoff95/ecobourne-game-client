@@ -8,8 +8,8 @@ var firebaseConfig = {
   appId: "1:342132988603:web:59feab64b679748217279e"
 };
 firebase.initializeApp(firebaseConfig);
-var database = firebase.database();
 
+let database = firebase.database();
 let board = {
   maxTiles: 100,
   tileWidth: 16,
@@ -36,9 +36,13 @@ let fdbAge = 0;
 let rdbStarvation = 0;
 let rdbAge = 0;
 let dbPred = 0;
+let timeStampNum = 0;
+let time = 0;
 
-
-let sliderVal = $(speedSlider).val();
+let muted = false;
+let speedModifier = 1;
+let toolBox;
+let sliderVal = $(speedSlider).val() / speedModifier;
 let foxId = 25;
 let bunnyId = 30;
 let mapArray = new Array();
@@ -47,7 +51,7 @@ let bunnyImg = new Image();
 let foxImg = new Image();
 let bearImg = new Image();
 let grassImg = new Image();
-grassLoaded = false;
+let pop = new Audio("blop.wav");
 grassImg.src = "grassTiles.png";
 bunnyImg.src = "rabbit.png";
 foxImg.src = "fox.png";
@@ -56,6 +60,7 @@ grassImg.onload = () => {
   renderBackground();
   startGame();
 };
+database.ref(`/timestamps/${timeStampNum}`).set(time);
 let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
   this.animalType = animalType;
   this.id = id;
@@ -76,7 +81,8 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
   this.currentDirection = direction;
   this.upOrDown = "up";
 
-  this.foodSearch = false;
+  this.pathLength = 0;
+
   this.foodToSplice = null;
 
   //Counter variables for bunny
@@ -180,6 +186,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     if (this.animalType === "rabbit") {
       if (bunniesArray.length < this.max) {
         bunnyId++;
+        if (!muted) {
+          pop.play();
+        }
         bunniesArray.push(
           new Animal("rabbit", this.col + 5, this.row, bunnyId, "yellow", 20)
         );
@@ -343,11 +352,10 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         bunniesArray[i].state = "dead";
         bunniesArray = bunniesArray.filter(
           bunny => bunny.id !== bunniesArray[i].id
-       
         );
         dbPred++;
-        writeData("rabbit", "predator")
-        
+        writeData("rabbit", "predator");
+
         if (this.preyEaten === 3) {
           this.state = "tired";
         }
@@ -379,9 +387,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     this.babyTime++;
     this.timeAlive++;
     if (this.timeAlive > randomNumber(2000, 2200)) {
-      rdbAge ++
-      writeData("rabbit", "oldAge")
-      console.log("died from age");
+      rdbAge++;
+      writeData("rabbit", "oldAge");
+
       this.state = "dead";
     }
 
@@ -422,9 +430,8 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
           this.eating = 0;
         }
       } else if (this.hunger > this.starvation) {
-        console.log("starved");
-        rdbStarvation += 1
-        
+        rdbStarvation += 1;
+
         this.state = "dead";
       } else {
         this.state = "idle";
@@ -481,8 +488,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
 
         this.timeAlive++;
         if (this.timeAlive > randomNumber(2000, 2200)) {
-          console.log("died from age");
-          rdbAge ++;
+          rdbAge++;
           writeData("rabbit", "age");
           this.state = "dead";
         }
@@ -490,9 +496,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
           this.state = "pathing";
         }
         if (this.hunger > this.starvation) {
-          rdbStarvation ++;
-          writeData("rabbit", "starvation")
-          console.log("STARVED");
+          rdbStarvation++;
+          writeData("rabbit", "starvation");
+
           this.state = "dead";
         }
         this.moveCounter = 0;
@@ -563,12 +569,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
           this.row--;
         }
         if (this.row === 0) {
-          foxArray = foxArray.filter(fox => fox.id != this.id)
-          fdbStarvation ++;
-          writeData("fox", "starvation")
-
-          
-         
+          foxArray = foxArray.filter(fox => fox.id != this.id);
+          fdbStarvation++;
+          writeData("fox", "starvation");
         }
         // if (
         //   this.currentDirection === "down" &&
@@ -588,7 +591,30 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         this.moveCounter = 0;
       }
     } else if (this.animalType === "bear") {
-      if (this.currentDirection === "left") {
+      console.log("I'm a bear and I should be moving");
+      console.log(this.moveCounter);
+
+      this.moveCounter += 10;
+      if (this.pathLength < 10) {
+        if (this.currentDirection === "left" && this.col > 0) {
+          if (this.moveCounter > 100) {
+            this.col--;
+            this.pathLength++;
+            this.moveCounter = 0;
+          }
+        } else if (
+          this.currentDirection === "right" &&
+          this.col < board.maxTiles
+        ) {
+          if (this.moveCounter > 100) {
+            this.col++;
+            this.pathLength++;
+            this.moveCounter = 0;
+          }
+        }
+      } else {
+        this.currentDirection = "right";
+        this.pathLength = 0;
       }
     }
 
@@ -717,26 +743,23 @@ function renderBackground() {
     }
   }
 }
-function writeData(animal, ) {
-  if (animal == "rabbit"){
-    if(deathby === "starvation") {
+function writeData(animal, deathby) {
+  if (animal == "rabbit") {
+    if (deathby === "starvation") {
       database.ref("rabbits/deaths/starvation").set(rdbStarvation);
-    } else if (deathby === 'predator') {
+    } else if (deathby === "predator") {
       database.ref("rabbits/deaths/predator").set(dbPred);
     } else {
       database.ref("rabbits/deaths/oldAge").set(rdbAge);
     }
-
   } else if (animal === "fox") {
-    if (deathBy === "starvation") {
+    if (deathby === "starvation") {
       database.ref("foxes/deaths/starvation").set(fdbStarvation);
     } else {
       database.ref("foxes/deaths/oldAge").set(fdbAge);
     }
     //fox death logic to db
-
   }
-    
 }
 
 function addFood() {
@@ -756,14 +779,52 @@ function click(event) {
   var y = event.clientY;
   console.log(x + " " + y);
 }
+$("#audio").on("click", function() {
+  if (!muted) {
+    $("#audio").attr("src", "speakerMuted.png");
+    muted = true;
+  } else {
+    muted = false;
+    $("#audio").attr("src", "speaker.png");
+  }
+});
+$(".icons").on("click", function() {
+  let name = $(this).attr("name");
+  toolBox = name;
+});
 canvas.addEventListener(
   "click",
   function(evt) {
     var mousePos = getMousePos(canvas, evt);
+    console.log(toolBox);
 
-    mapArray[mousePos.y][mousePos.x] = 1;
+    if (toolBox === "grass1") {
+      mapArray[mousePos.y][mousePos.x] = GRASS_1;
+    } else if (toolBox === "grass2") {
+      mapArray[mousePos.y][mousePos.x] = GRASS_2;
+    } else if (toolBox === "grass3") {
+      mapArray[mousePos.y][mousePos.x] = GRASS_3;
+    } else if (toolBox === "tree") {
+      mapArray[mousePos.y][mousePos.x] = 1;
+    } else if (toolBox === "berry") {
+      board.foodPositions.push({ xPos: mousePos.y, yPos: mousePos.x });
+      mapArray[mousePos.y][mousePos.x] = 3;
+    } else if (toolBox === "den") {
+      mapArray[mousePos.y][mousePos.x] = FOX_DEN;
+    } else if (toolBox === "rabbit") {
+      bunnyId++;
+      bunniesArray.push(
+        new Animal("rabbit", mousePos.x, mousePos.y, bunnyId, "yellow", 20)
+      );
+    } else if (toolBox === "fox") {
+      foxId++;
+      foxArray.push(
+        new Animal("fox", mousePos.x, mousePos.y, foxId, "yellow", 20, "left")
+      );
+    }
     renderBackground();
   },
+
   false
 );
 
@@ -828,7 +889,8 @@ let bearArray = [
     randomNumber(25, 25),
     50,
     "yellow",
-    20
+    20,
+    "left"
   )
 ];
 
@@ -845,25 +907,13 @@ function initialize(animal) {
   }
   for (i = 0; i < bearArray.length; i++) {
     bearArray[i].draw();
+    bearArray[i].stateManager();
   }
 }
 
 createArray();
 console.log(mapArray);
 let frameCount = 0;
-function mainLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  initialize();
-  updateSlider();
-  board.season += 1;
-
-  if (board.season === 12000) {
-    renderBackground();
-  }
-}
-function startGame() {
-  setInterval(mainLoop, 1 * sliderVal);
-}
 
 //slider JS
 let visible = false;
@@ -872,7 +922,7 @@ $("#showSliders").on("click", () => {
   if ($("#showSliders").attr("clicked") == "false") {
     console.log("HEY");
     $("#sliders").css("visibility", "visible");
-    $("#sliders").animate({ height: "500px" }, 500);
+    $("#sliders").animate({ height: "400px" }, 500);
     $("#showSliders").attr("clicked", "true");
   } else {
     $("#sliders").animate({ height: "5px" }, 500, function() {
@@ -883,7 +933,34 @@ $("#showSliders").on("click", () => {
   }
 });
 
+let interval = setInterval(mainLoop, sliderVal / speedModifier);
+
+function startGame() {
+  clearInterval(interval);
+  interval = setInterval(mainLoop, sliderVal / speedModifier);
+}
+
 function updateSlider() {
-  let range = document.getElementById("range");
-  sliderVal = $(range).val();
+  clearInterval(interval);
+  let range = $("#range").val();
+  sliderVal = range;
+  interval = setInterval(mainLoop, sliderVal / speedModifier);
+}
+
+function pushTime() {
+  time += 6;
+  timeStampNum++;
+  database.ref(`/timestamps/${timeStampNum}`).set(time);
+}
+setInterval(pushTime, 360000);
+function mainLoop() {
+  console.log(sliderVal);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  initialize();
+  updateSlider();
+  board.season += 1;
+
+  if (board.season === 12000) {
+    renderBackground();
+  }
 }
