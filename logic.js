@@ -30,6 +30,7 @@ const backGroundCtx = backgroundCanvas.getContext("2d");
 const speedSlider = $("#range");
 
 //counter variables for firebase
+
 let fdbStarvation = 0;
 let fdbAge = 0;
 let rdbStarvation = 0;
@@ -563,9 +564,11 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         }
         if (this.row === 0) {
           foxArray = foxArray.filter(fox => fox.id != this.id)
+          fdbStarvation ++;
+          writeData("fox", "starvation")
 
           
-          this.currentDirection = "down";
+         
         }
         // if (
         //   this.currentDirection === "down" &&
@@ -714,17 +717,22 @@ function renderBackground() {
     }
   }
 }
-function writeData(animal, deathby) {
+function writeData(animal, ) {
   if (animal == "rabbit"){
     if(deathby === "starvation") {
-      database.ref("rabbits/deaths/starvation").set(rdbStarvation)
+      database.ref("rabbits/deaths/starvation").set(rdbStarvation);
     } else if (deathby === 'predator') {
-      database.ref("rabbits/deaths/predator").set(dbPred)
+      database.ref("rabbits/deaths/predator").set(dbPred);
     } else {
-      database.ref("rabbits/deaths/oldAge").set(rdbAge)
+      database.ref("rabbits/deaths/oldAge").set(rdbAge);
     }
 
   } else if (animal === "fox") {
+    if (deathBy === "starvation") {
+      database.ref("foxes/deaths/starvation").set(fdbStarvation);
+    } else {
+      database.ref("foxes/deaths/oldAge").set(fdbAge);
+    }
     //fox death logic to db
 
   }
