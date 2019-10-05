@@ -37,7 +37,7 @@ let rdbStarvation = 0;
 let rdbAge = 0;
 let dbPred = 0;
 
-
+let toolBox;
 let sliderVal = $(speedSlider).val();
 let foxId = 25;
 let bunnyId = 30;
@@ -717,7 +717,7 @@ function renderBackground() {
     }
   }
 }
-function writeData(animal, ) {
+function writeData(animal, deathby) {
   if (animal == "rabbit"){
     if(deathby === "starvation") {
       database.ref("rabbits/deaths/starvation").set(rdbStarvation);
@@ -728,7 +728,7 @@ function writeData(animal, ) {
     }
 
   } else if (animal === "fox") {
-    if (deathBy === "starvation") {
+    if (deathby === "starvation") {
       database.ref("foxes/deaths/starvation").set(fdbStarvation);
     } else {
       database.ref("foxes/deaths/oldAge").set(fdbAge);
@@ -756,14 +756,33 @@ function click(event) {
   var y = event.clientY;
   console.log(x + " " + y);
 }
+
+$(".icons").on("click", function() {
+  let name = (($(this).attr("name")))
+  toolBox = name
+})
 canvas.addEventListener(
   "click",
   function(evt) {
     var mousePos = getMousePos(canvas, evt);
 
-    mapArray[mousePos.y][mousePos.x] = 1;
+    if(toolBox === "grass1") {
+      mapArray[mousePos.y][mousePos.x] = GRASS_1; 
+    } else if (toolBox === "grass2") {
+      mapArray[mousePos.y][mousePos.x] = GRASS_2;
+    } else if (toolBox === "grass3") {
+      mapArray[mousePos.y][mousePos.x] = GRASS_3;
+    } else if (toolBox === "tree") {
+      mapArray[mousePos.y][mousePos.x] = 1;
+
+    } else if (toolBox === "berry") {
+      mapArray[mousePos.y][mousePos.x] = 3;
+    } else if (toolBox === "den") {
+      mapArray[mousePos.y][mousePos.x] = FOX_DEN;
+    } 
     renderBackground();
   },
+  
   false
 );
 
