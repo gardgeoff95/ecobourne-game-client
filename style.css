@@ -23,7 +23,7 @@ canvas {
   background-color: #222629;
   opacity: 0.8;
   width: 200px;
-  padding: 10px;
+  padding: 10x;
   height: 0px;
   visibility: hidden;
   color: #cbcccc;
@@ -71,4 +71,22 @@ canvas {
 
     direction: rtl
   
+}
+#audio{
+  width: 36px;
+  height: 36px;
+}
+
+#audioButton{
+  position: fixed;
+  left : 20px;
+  z-index: 10;
+  background-color: transparent;
+  border: none;
+
+}
+#audioButton:focus{
+  outline: none;
+
+
 }

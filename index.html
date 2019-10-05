@@ -16,7 +16,7 @@
     <script src="https://www.gstatic.com/firebasejs/6.0.4/firebase-database.js"></script>
 
     <script src="./jquery.js"></script>
-    <script src="./moment.js"></script>
+
 
     <link
       rel="stylesheet"
@@ -34,6 +34,9 @@
 
   <body>
     <div class="wrapper">
+        <button id="audioButton">
+            <img id="audio" name="audio"  src="speaker.png" alt="image of speaker">
+          </button>
       <div id="sliders">
         <div class="sliderSet">
           <h2>Speed</h2>
@@ -99,7 +102,9 @@
                 <img name="den" class="tile-icons icons" src="den.png" />
               </button>
             </div>
+          
           </div>
+         
         </div>
       </div>
 
@@ -116,5 +121,6 @@
         <canvas id="myCanvas"></canvas>
       </div>
     </div>
+    
   </body>
 </html>
