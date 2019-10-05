@@ -10,9 +10,6 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var database = firebase.database();
 
-
-
-
 let board = {
   maxTiles: 100,
   tileWidth: 16,
@@ -30,19 +27,27 @@ const canvas = document.getElementById("myCanvas");
 const ctx = canvas.getContext("2d");
 const backgroundCanvas = document.getElementById("background");
 const backGroundCtx = backgroundCanvas.getContext("2d");
+const speedSlider = $("#range");
+
+
+
+let dbStarvation = 0;
+let dbAge = 0;
+let dbPred = 0;
+let sliderVal = $(speedSlider).val();
 let foxId = 25;
-
 let bunnyId = 30;
-
 let mapArray = new Array();
 let bunnieCount = 0;
 let bunnyImg = new Image();
 let foxImg = new Image();
+let bearImg = new Image();
 let grassImg = new Image();
 grassLoaded = false;
 grassImg.src = "grassTiles.png";
 bunnyImg.src = "rabbit.png";
 foxImg.src = "fox.png";
+bearImg.src = "bear.png";
 grassImg.onload = () => {
   renderBackground();
   startGame();
@@ -58,11 +63,11 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
   this.state = "idle";
 
   //Max pops
-  this.max = 50;
+  this.max = 200;
   this.reevaluate = false;
 
   this.maxHunger = randomNumber(2000, 3000);
-  this.starvation = randomNumber(3000, 3100);
+  this.starvation = randomNumber(2500, 3000);
 
   this.currentDirection = direction;
   this.upOrDown = "up";
@@ -98,9 +103,6 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
 
   //Function called every time the startGame interval is called
   this.stateManager = function() {
-  
-    
- 
     if (this.state === "idle") {
       this.move();
     } else if (
@@ -182,7 +184,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
       this.denCounter++;
       if (this.denCounter > 500) {
         let dir = randomNumber(1, 2);
-        if (foxArray.length < 4) {
+        if (foxArray.length < 2) {
           foxId++;
           if (dir === 1) {
             foxArray.push(
@@ -226,6 +228,8 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
       draw("image", bunnyImg, this.col, this.row);
     } else if (this.animalType === "fox" && this.state != "den") {
       draw("image", foxImg, this.col, this.row);
+    } else if (this.animalType === "bear") {
+      draw("image", bearImg, this.col, this.row);
     }
   };
 
@@ -267,7 +271,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     }
 
     this.moveCounter += 50;
-   
+
     if (this.moveCounter > 100) {
       if (this.row > this.denPath.y && possibleJumps.includes("up")) {
         this.row -= 1;
@@ -335,7 +339,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         bunniesArray[i].state = "dead";
         bunniesArray = bunniesArray.filter(
           bunny => bunny.id !== bunniesArray[i].id
+       
         );
+        database.ref("/wolves/preyEaten").set()
         if (this.preyEaten === 3) {
           this.state = "tired";
         }
@@ -363,7 +369,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     if (grassArray.includes(mapArray[this.row][this.col - 1])) {
       possibleJumps.push("left");
     }
-    this.hunger++;
+    // this.hunger++;
     this.babyTime++;
     this.timeAlive++;
     if (this.timeAlive > randomNumber(2000, 3000)) {
@@ -469,7 +475,6 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
           this.state = "dead";
         }
         if (this.hunger > this.maxHunger && board.foodPositions.length > 1) {
-          
           this.state = "pathing";
         }
         if (this.hunger > this.starvation) {
@@ -562,6 +567,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         }
 
         this.moveCounter = 0;
+      }
+    } else if (this.animalType === "bear") {
+      if (this.currentDirection === "left") {
       }
     }
 
@@ -756,8 +764,15 @@ let bunniesArray = [
     3,
     "yellow",
     20
+  ),
+  new Animal(
+    "rabbit",
+    randomNumber(30, 40),
+    randomNumber(5, 10),
+    4,
+    "yellow",
+    20
   )
-
 ];
 let foxArray = [
   new Animal(
@@ -768,6 +783,17 @@ let foxArray = [
     "yellow",
     20,
     "right"
+  )
+];
+
+let bearArray = [
+  new Animal(
+    "bear",
+    randomNumber(25, 25),
+    randomNumber(25, 25),
+    50,
+    "yellow",
+    20
   )
 ];
 
@@ -782,6 +808,9 @@ function initialize(animal) {
     foxArray[i].draw();
     foxArray[i].stateManager();
   }
+  for (i = 0; i < bearArray.length; i++) {
+    bearArray[i].draw();
+  }
 }
 
 createArray();
@@ -790,6 +819,7 @@ let frameCount = 0;
 function mainLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   initialize();
+  updateSlider();
   board.season += 1;
 
   if (board.season === 12000) {
@@ -797,30 +827,28 @@ function mainLoop() {
   }
 }
 function startGame() {
-  setInterval(mainLoop, 1);
+  setInterval(mainLoop, 1 * sliderVal);
 }
-
-
 
 //slider JS
 let visible = false;
 
 $("#showSliders").on("click", () => {
-
   if ($("#showSliders").attr("clicked") == "false") {
-    console.log("HEY")
+    console.log("HEY");
     $("#sliders").css("visibility", "visible");
-    $("#sliders").animate({height: "500px"}, 500);
-    $("#showSliders").attr("clicked", "true")
+    $("#sliders").animate({ height: "500px" }, 500);
+    $("#showSliders").attr("clicked", "true");
   } else {
- 
-    $("#sliders").animate({height: "5px"}, 500, function() {
+    $("#sliders").animate({ height: "5px" }, 500, function() {
       $("#sliders").css("visibility", "hidden");
     });
- 
-    $("#showSliders").attr("clicked", "false")
 
+    $("#showSliders").attr("clicked", "false");
   }
-  
+});
 
-})
+function updateSlider() {
+  let range = document.getElementById("range");
+  sliderVal = $(range).val();
+}
