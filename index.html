@@ -17,6 +17,7 @@
 
     <script src="./jquery.js"></script>
 
+
     <link
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
@@ -33,15 +34,19 @@
 
   <body>
     <div class="wrapper">
+        <button id="audioButton">
+            <img id="audio" name="audio"  src="speaker.png" alt="image of speaker">
+          </button>
       <div id="sliders">
         <div class="sliderSet">
           <h2>Speed</h2>
           <input
             type="range"
             min="1"
-            max="10"
+            max="20 "
             class="custom-range"
             id="range"
+          
           />
         </div>
         <div class="sliderSet">
@@ -67,12 +72,12 @@
           <div class="row">
             <div class="col-md-4">
               <button class="iconButton">
-                <img name="grass1" class="icons" src="grass1.png" />
+                <img name="grass1" class="icons" src="grass2.png" />
               </button>
             </div>
             <div class="col-md-4">
               <button class="iconButton">
-                <img name="grass2" class="icons" src="grass2.png" />
+                <img name="grass2" class="icons" src="grass1.png" />
               </button>
             </div>
             <div class="col-md-4">
@@ -83,15 +88,23 @@
           </div>
           <div class="row">
             <div class="col-md-4">
-              <img name="berry" class="tile-icons icons" src="berries.png" />
+              <button class="iconButton">
+                <img name="berry" class="tile-icons icons" src="berries.png" />
+              </button>
             </div>
             <div class="col-md-4">
-              <img name="tree" class="tile-icons icons" src="tree.png" />
+              <button class="iconButton">
+                <img name="tree" class="tile-icons icons" src="tree.png" />
+              </button>
             </div>
             <div class="col-md-4">
-              <img name="den" class="tile-icons icons" src="den.png" />
+              <button class="iconButton">
+                <img name="den" class="tile-icons icons" src="den.png" />
+              </button>
             </div>
+          
           </div>
+         
         </div>
       </div>
 
@@ -108,5 +121,6 @@
         <canvas id="myCanvas"></canvas>
       </div>
     </div>
+    
   </body>
 </html>
