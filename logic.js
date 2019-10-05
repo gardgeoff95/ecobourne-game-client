@@ -29,11 +29,15 @@ const backgroundCanvas = document.getElementById("background");
 const backGroundCtx = backgroundCanvas.getContext("2d");
 const speedSlider = $("#range");
 
+//counter variables for firebase
 
-
-let dbStarvation = 0;
-let dbAge = 0;
+let fdbStarvation = 0;
+let fdbAge = 0;
+let rdbStarvation = 0;
+let rdbAge = 0;
 let dbPred = 0;
+
+
 let sliderVal = $(speedSlider).val();
 let foxId = 25;
 let bunnyId = 30;
@@ -341,7 +345,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
           bunny => bunny.id !== bunniesArray[i].id
        
         );
-        database.ref("/wolves/preyEaten").set()
+        dbPred++;
+        writeData("rabbit", "predator")
+        
         if (this.preyEaten === 3) {
           this.state = "tired";
         }
@@ -372,7 +378,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     // this.hunger++;
     this.babyTime++;
     this.timeAlive++;
-    if (this.timeAlive > randomNumber(2000, 3000)) {
+    if (this.timeAlive > randomNumber(2000, 2200)) {
+      rdbAge ++
+      writeData("rabbit", "oldAge")
       console.log("died from age");
       this.state = "dead";
     }
@@ -415,6 +423,8 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         }
       } else if (this.hunger > this.starvation) {
         console.log("starved");
+        rdbStarvation += 1
+        
         this.state = "dead";
       } else {
         this.state = "idle";
@@ -470,14 +480,18 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         }
 
         this.timeAlive++;
-        if (this.timeAlive > randomNumber(2000, 3000)) {
+        if (this.timeAlive > randomNumber(2000, 2200)) {
           console.log("died from age");
+          rdbAge ++;
+          writeData("rabbit", "age");
           this.state = "dead";
         }
         if (this.hunger > this.maxHunger && board.foodPositions.length > 1) {
           this.state = "pathing";
         }
         if (this.hunger > this.starvation) {
+          rdbStarvation ++;
+          writeData("rabbit", "starvation")
           console.log("STARVED");
           this.state = "dead";
         }
@@ -549,22 +563,27 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
           this.row--;
         }
         if (this.row === 0) {
-          this.currentDirection = "down";
+          foxArray = foxArray.filter(fox => fox.id != this.id)
+          fdbStarvation ++;
+          writeData("fox", "starvation")
+
+          
+         
         }
-        if (
-          this.currentDirection === "down" &&
-          possibleJumps.includes("down")
-        ) {
-          this.row++;
-        } else if (
-          this.currentDirection === "down" &&
-          !possibleJumps.includes("down")
-        ) {
-          this.col++;
-        }
-        if (this.currentDirection === "down" && this.row == 99) {
-          this.currentDirection = "left";
-        }
+        // if (
+        //   this.currentDirection === "down" &&
+        //   possibleJumps.includes("down")
+        // ) {
+        //   this.row++;
+        // } else if (
+        //   this.currentDirection === "down" &&
+        //   !possibleJumps.includes("down")
+        // ) {
+        //   this.col++;
+        // }
+        // if (this.currentDirection === "down" && this.row == 99) {
+        //   this.currentDirection = "left";
+        // }
 
         this.moveCounter = 0;
       }
@@ -698,10 +717,26 @@ function renderBackground() {
     }
   }
 }
-function renderHabitat() {
-  for (let y = 0; y < board.maxTiles; y++) {
-    for (let x = 0; x < board.maxTiles; x++) {}
+function writeData(animal, ) {
+  if (animal == "rabbit"){
+    if(deathby === "starvation") {
+      database.ref("rabbits/deaths/starvation").set(rdbStarvation);
+    } else if (deathby === 'predator') {
+      database.ref("rabbits/deaths/predator").set(dbPred);
+    } else {
+      database.ref("rabbits/deaths/oldAge").set(rdbAge);
+    }
+
+  } else if (animal === "fox") {
+    if (deathBy === "starvation") {
+      database.ref("foxes/deaths/starvation").set(fdbStarvation);
+    } else {
+      database.ref("foxes/deaths/oldAge").set(fdbAge);
+    }
+    //fox death logic to db
+
   }
+    
 }
 
 function addFood() {
