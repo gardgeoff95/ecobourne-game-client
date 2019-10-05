@@ -1,1 +1,1 @@
-let array = [object = {x: 5, y: 10}]
+console.log(Date.now() / 1000);

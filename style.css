@@ -67,7 +67,8 @@ canvas {
   margin-top: 20px;
   border-bottom: 2px solid #6B6E70;
 }
-.tile-icons{
-  margin-top: 20px;
-  margin-bottom: 20px;
+#range{
+
+    direction: rtl
+  
 }

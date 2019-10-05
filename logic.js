@@ -1,3 +1,5 @@
+
+
 var firebaseConfig = {
   apiKey: "AIzaSyAaktd7xWg2F92a5py9ZBB5fdsySImFOGQ",
   authDomain: "ecobourne-fb892.firebaseapp.com",
@@ -36,9 +38,12 @@ let fdbAge = 0;
 let rdbStarvation = 0;
 let rdbAge = 0;
 let dbPred = 0;
+let timeStampNum = 0;
+let time = 0;
 
+let speedModifier = 1;
 let toolBox;
-let sliderVal = $(speedSlider).val();
+let sliderVal = $(speedSlider).val() / speedModifier ;
 let foxId = 25;
 let bunnyId = 30;
 let mapArray = new Array();
@@ -47,6 +52,7 @@ let bunnyImg = new Image();
 let foxImg = new Image();
 let bearImg = new Image();
 let grassImg = new Image();
+let pop = new Audio("blop.wav")
 grassLoaded = false;
 grassImg.src = "grassTiles.png";
 bunnyImg.src = "rabbit.png";
@@ -180,6 +186,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     if (this.animalType === "rabbit") {
       if (bunniesArray.length < this.max) {
         bunnyId++;
+        pop.play();
         bunniesArray.push(
           new Animal("rabbit", this.col + 5, this.row, bunnyId, "yellow", 20)
         );
@@ -381,7 +388,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     if (this.timeAlive > randomNumber(2000, 2200)) {
       rdbAge ++
       writeData("rabbit", "oldAge")
-      console.log("died from age");
+      
       this.state = "dead";
     }
 
@@ -422,7 +429,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
           this.eating = 0;
         }
       } else if (this.hunger > this.starvation) {
-        console.log("starved");
+       
         rdbStarvation += 1
         
         this.state = "dead";
@@ -481,7 +488,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
 
         this.timeAlive++;
         if (this.timeAlive > randomNumber(2000, 2200)) {
-          console.log("died from age");
+       
           rdbAge ++;
           writeData("rabbit", "age");
           this.state = "dead";
@@ -492,7 +499,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         if (this.hunger > this.starvation) {
           rdbStarvation ++;
           writeData("rabbit", "starvation")
-          console.log("STARVED");
+ 
           this.state = "dead";
         }
         this.moveCounter = 0;
@@ -765,6 +772,7 @@ canvas.addEventListener(
   "click",
   function(evt) {
     var mousePos = getMousePos(canvas, evt);
+    console.log(toolBox)
 
     if(toolBox === "grass1") {
       mapArray[mousePos.y][mousePos.x] = GRASS_1; 
@@ -774,12 +782,18 @@ canvas.addEventListener(
       mapArray[mousePos.y][mousePos.x] = GRASS_3;
     } else if (toolBox === "tree") {
       mapArray[mousePos.y][mousePos.x] = 1;
-
     } else if (toolBox === "berry") {
+      board.foodPositions.push({xPos : mousePos.y, yPos: mousePos.x})
       mapArray[mousePos.y][mousePos.x] = 3;
     } else if (toolBox === "den") {
       mapArray[mousePos.y][mousePos.x] = FOX_DEN;
-    } 
+    } else if (toolBox === "rabbit") {
+      bunnyId ++
+      bunniesArray.push(new Animal("rabbit", mousePos.x, mousePos.y, bunnyId, 'yellow', 20))
+    } else if (toolBox === "fox") {
+      foxId ++
+      foxArray.push(new Animal("fox", mousePos.x, mousePos.y, foxId, "yellow", 20, "left"))
+    }
     renderBackground();
   },
   
@@ -870,19 +884,8 @@ function initialize(animal) {
 createArray();
 console.log(mapArray);
 let frameCount = 0;
-function mainLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  initialize();
-  updateSlider();
-  board.season += 1;
 
-  if (board.season === 12000) {
-    renderBackground();
-  }
-}
-function startGame() {
-  setInterval(mainLoop, 1 * sliderVal);
-}
+
 
 //slider JS
 let visible = false;
@@ -902,7 +905,40 @@ $("#showSliders").on("click", () => {
   }
 });
 
-function updateSlider() {
-  let range = document.getElementById("range");
-  sliderVal = $(range).val();
+
+let interval =  setInterval(mainLoop, sliderVal / speedModifier)
+
+
+function startGame() {
+  clearInterval(interval);
+  interval = setInterval(mainLoop,  sliderVal / speedModifier);
+
+}
+
+function updateSlider(){
+  clearInterval(interval)
+  let range = $("#range").val()
+  sliderVal = range;
+  interval = setInterval(mainLoop, sliderVal / speedModifier);
+
+}
+
+
+database.ref(`/timestamps/${timeStampNum}`).set(time)
+function pushTime() {
+  time += 6
+  timeStampNum ++
+  database.ref(`/timestamps/${timeStampNum}`).set(time)
+}
+setInterval(pushTime, 360000)
+function mainLoop() {
+  console.log(sliderVal)
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  initialize();
+  updateSlider();
+  board.season += 1;
+
+  if (board.season === 12000) {
+    renderBackground();
+  }
 }
