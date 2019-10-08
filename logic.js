@@ -1,3 +1,4 @@
+
 var firebaseConfig = {
   apiKey: "AIzaSyAaktd7xWg2F92a5py9ZBB5fdsySImFOGQ",
   authDomain: "ecobourne-fb892.firebaseapp.com",
@@ -8,8 +9,9 @@ var firebaseConfig = {
   appId: "1:342132988603:web:59feab64b679748217279e"
 };
 firebase.initializeApp(firebaseConfig);
-
 let database = firebase.database();
+
+database.ref("/").set("")
 let board = {
   maxTiles: 100,
   tileWidth: 16,
@@ -33,9 +35,13 @@ const speedSlider = $("#range");
 
 let fdbStarvation = 0;
 let fdbAge = 0;
+let bdbStarvation = 0;
+let bdbAge = 0;
 let rdbStarvation = 0;
 let rdbAge = 0;
 let dbPred = 0;
+
+
 let timeStampNum = 0;
 let time = 0;
 
@@ -72,11 +78,11 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
   this.state = "idle";
 
   //Max pops
-  this.max = 200;
+  this.max = 40;
   this.reevaluate = false;
 
-  this.maxHunger = randomNumber(2000, 3000);
-  this.starvation = randomNumber(2500, 3000);
+  this.maxHunger = randomNumber(500, 700);
+  this.starvation = randomNumber(600, 800);
 
   this.currentDirection = direction;
   this.upOrDown = "up";
@@ -113,6 +119,8 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
 
   //Function called every time the startGame interval is called
   this.stateManager = function() {
+   
+
     if (this.state === "idle") {
       this.move();
     } else if (
@@ -171,7 +179,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
             this.row === bunniesArray[i].row &&
             this.id != bunniesArray[i].id)
         ) {
-          if (this.babyTime > 400 && bunniesArray[i].babyTime > 200) {
+          if (this.babyTime > 100 && bunniesArray[i].babyTime > 100) {
             this.babyTime = 0;
 
             this.multiply();
@@ -186,9 +194,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     if (this.animalType === "rabbit") {
       if (bunniesArray.length < this.max) {
         bunnyId++;
-        if (!muted) {
-          pop.play();
-        }
+        // if (!muted) {
+        //   pop.play();
+        // }
         bunniesArray.push(
           new Animal("rabbit", this.col + 5, this.row, bunnyId, "yellow", 20)
         );
@@ -197,7 +205,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
       this.denCounter++;
       if (this.denCounter > 500) {
         let dir = randomNumber(1, 2);
-        if (foxArray.length < 2) {
+        if (foxArray.length < 10) {
           foxId++;
           if (dir === 1) {
             foxArray.push(
@@ -249,9 +257,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
   //finds random path to den if fox
   this.findDen = function() {
     let randomIndex = randomNumber(0, board.foxDenPositions.length);
-
     let randomArrayItem = board.foxDenPositions[randomIndex];
-
     let y = randomArrayItem.xPos;
     let x = randomArrayItem.yPos;
     this.denPath.x = x;
@@ -327,7 +333,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     if (this.animalType === "rabbit") {
       bunniesArray = bunniesArray.filter(bunny => bunny.id != this.id);
       // console.log("another one bites the dust")
-      // console.log(bunniesArray.length)
+      // console.log(bunniesArray.length) 
     }
     // for (let i = 0; i < bunniesArray.length; i++) {
     //   if (this.id === bunniesArray[i].id) {
@@ -349,7 +355,9 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         (this.row === bunniesArray[i].row && this.col === bunniesArray[i].col)
       ) {
         this.preyEaten++;
+
         bunniesArray[i].state = "dead";
+      
         bunniesArray = bunniesArray.filter(
           bunny => bunny.id !== bunniesArray[i].id
         );
@@ -393,7 +401,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
       this.state = "dead";
     }
 
-    this.moveCounter += 20;
+    this.moveCounter += 50;
     if (this.moveCounter > 100) {
       if (this.row > this.closestFood.y && possibleJumps.includes("up")) {
         this.row -= 1;
@@ -469,8 +477,8 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
       this.idleTime += 1;
       this.hunger += 1;
       this.babyTime++;
-      this.moveCounter += 50;
-      if (this.moveCounter > randomNumber(300, 400)) {
+      this.moveCounter += 100;
+      if (this.moveCounter > randomNumber(100, 200)) {
         switch (direction) {
           case "up":
             this.row -= 1;
@@ -525,8 +533,8 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
         possibleJumps.push("left");
       }
 
-      this.moveCounter += 80;
-      if (this.moveCounter > randomNumber(150, 200)) {
+      this.moveCounter += 100;
+      if (this.moveCounter > 100) {
         if (
           possibleJumps.includes("left") &&
           this.col > 0 &&
@@ -573,27 +581,12 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
           fdbStarvation++;
           writeData("fox", "starvation");
         }
-        // if (
-        //   this.currentDirection === "down" &&
-        //   possibleJumps.includes("down")
-        // ) {
-        //   this.row++;
-        // } else if (
-        //   this.currentDirection === "down" &&
-        //   !possibleJumps.includes("down")
-        // ) {
-        //   this.col++;
-        // }
-        // if (this.currentDirection === "down" && this.row == 99) {
-        //   this.currentDirection = "left";
-        // }
+   
 
         this.moveCounter = 0;
       }
     } else if (this.animalType === "bear") {
-      console.log("I'm a bear and I should be moving");
-      console.log(this.moveCounter);
-
+     
       this.moveCounter += 10;
       if (this.pathLength < 10) {
         if (this.currentDirection === "left" && this.col > 0) {
@@ -759,6 +752,10 @@ function writeData(animal, deathby) {
       database.ref("foxes/deaths/oldAge").set(fdbAge);
     }
     //fox death logic to db
+  } else if (animal === "bear") {
+    if (deathby === "starvation") {
+      database.ref("bears/deaths/starvation").set()
+    }
   }
 }
 
@@ -796,7 +793,7 @@ canvas.addEventListener(
   "click",
   function(evt) {
     var mousePos = getMousePos(canvas, evt);
-    console.log(toolBox);
+   
 
     if (toolBox === "grass1") {
       mapArray[mousePos.y][mousePos.x] = GRASS_1;
@@ -868,18 +865,20 @@ let bunniesArray = [
     4,
     "yellow",
     20
+  ),
+  new Animal(
+    "rabbit",
+    randomNumber(30, 40),
+    randomNumber(5, 10),
+    5,
+    "yellow",
+    20
   )
+  
 ];
 let foxArray = [
-  new Animal(
-    "fox",
-    randomNumber(30, 40),
-    randomNumber(30, 40),
-    10,
-    "yellow",
-    20,
-    "right"
-  )
+ 
+ 
 ];
 
 let bearArray = [
@@ -916,8 +915,6 @@ console.log(mapArray);
 let frameCount = 0;
 
 //slider JS
-let visible = false;
-
 $("#showSliders").on("click", () => {
   if ($("#showSliders").attr("clicked") == "false") {
     console.log("HEY");
@@ -928,24 +925,22 @@ $("#showSliders").on("click", () => {
     $("#sliders").animate({ height: "5px" }, 500, function() {
       $("#sliders").css("visibility", "hidden");
     });
-
     $("#showSliders").attr("clicked", "false");
   }
 });
 
-let interval = setInterval(mainLoop, sliderVal / speedModifier);
+// let interval = setInterval(mainLoop, sliderVal / speedModifier);
 
 function startGame() {
-  clearInterval(interval);
-  interval = setInterval(mainLoop, sliderVal / speedModifier);
+  window.requestAnimationFrame(mainLoop)
 }
 
-function updateSlider() {
-  clearInterval(interval);
-  let range = $("#range").val();
-  sliderVal = range;
-  interval = setInterval(mainLoop, sliderVal / speedModifier);
-}
+// function updateSlider() {
+//   clearInterval(interval);
+//   let range = $("#range").val();
+//   sliderVal = range;
+//   interval = setInterval(mainLoop, sliderVal / speedModifier);
+// }
 
 function pushTime() {
   time += 6;
@@ -953,14 +948,25 @@ function pushTime() {
   database.ref(`/timestamps/${timeStampNum}`).set(time);
 }
 setInterval(pushTime, 360000);
+
+
+frameCount = 0;
 function mainLoop() {
-  console.log(sliderVal);
+  frameCount+= 1;
+  if (frameCount < 1) {
+    window.requestAnimationFrame(mainLoop);
+    return
+  }
+  frameCount = 0;
+  console.log(bunniesArray);
+ 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   initialize();
-  updateSlider();
+  // updateSlider();
   board.season += 1;
 
   if (board.season === 12000) {
     renderBackground();
   }
+  window.requestAnimationFrame(mainLoop)
 }
