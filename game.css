@@ -1,0 +1,110 @@
+*{
+    outline: none;
+  }
+  
+  body {
+    background-color: #222629
+  }
+  canvas {
+    position: absolute;
+   left: 25px;
+    
+  }
+ 
+  #navigation{
+    position: fixed;
+    z-index: 1000
+  }
+  #sliders{
+    top: 50px;
+    position: fixed;
+    z-index: 10;
+    right: 40px;
+    background-color: #222629;
+    opacity: 0.8;
+    width: 200px;
+    padding: 10px;
+    height: 0px;
+    visibility: hidden;
+    color: #cbcccc;
+    border: 3px solid black;
+    border-radius: 5px;
+    text-align: center
+  }
+  #showSliders{
+    position: fixed;
+    z-index: 10;
+    right: 40px;
+    top: 5px;
+    width: 200px;
+    background-color: #222629;
+  
+  }
+  
+  #showSliders:hover{
+    background-color: #7c8993
+    
+  }
+  
+  .icons{
+  
+    width: 32px;
+    height: 32px;
+  }
+  .iconButton{
+    background-color: transparent;
+    border: none;
+    height : 50px;
+    width: 50px;
+  }
+  .iconButton:focus{
+    outline: none;
+    background-color: #6B6E70;
+    border: 2px solid black;
+    border-radius: 5px;
+  }
+  .navHeaders{
+    margin-top: 20px;
+    border-bottom: 2px solid #6B6E70;
+  }
+  #range{
+  
+      direction: rtl
+    
+  }
+  #audio{
+    width: 36px;
+    height: 36px;
+  }
+  
+  #audioButton{
+    position: fixed;
+    left : 20px;
+    z-index: 10;
+    background-color: transparent;
+    border: none;
+  
+  }
+  #audioButton:focus{
+    outline: none;
+  
+  
+  }
+ 
+  .gameWrapper{
+    display: none;
+  }
+  #dashboard{
+    display: none;
+  }
+  #endSim{
+    width: 100px;
+    position: fixed;
+    bottom: 20px;
+    right: 40px;
+    z-index: 1000;
+    background-color: #222629;
+  }
+  #endSim:hover{
+    background-color: #7c8993;
+  }

@@ -4,6 +4,7 @@
   "description": "",
   "main": "main",
   "dependencies": {
+    "d3": "^5.12.0",
     "electron": "^6.0.10"
   },
   "devDependencies": {},

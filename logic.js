@@ -1,4 +1,7 @@
 
+
+
+
 var firebaseConfig = {
   apiKey: "AIzaSyAaktd7xWg2F92a5py9ZBB5fdsySImFOGQ",
   authDomain: "ecobourne-fb892.firebaseapp.com",
@@ -41,10 +44,9 @@ let rdbStarvation = 0;
 let rdbAge = 0;
 let dbPred = 0;
 
-
+let maxBunnies = 200;
 let timeStampNum = 0;
 let time = 0;
-
 let muted = false;
 let speedModifier = 1;
 let toolBox;
@@ -62,24 +64,16 @@ grassImg.src = "grassTiles.png";
 bunnyImg.src = "rabbit.png";
 foxImg.src = "fox.png";
 bearImg.src = "bear.png";
-grassImg.onload = () => {
-  renderBackground();
-  startGame();
-};
+
 database.ref(`/timestamps/${timeStampNum}`).set(time);
-let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
+let Animal = function(animalType, x, y, id, speedModifier, direction) {
   this.animalType = animalType;
   this.id = id;
   this.col = x;
   this.row = y;
   this.speedModifier = speedModifier;
-  this.color = color;
 
   this.state = "idle";
-
-  //Max pops
-  this.max = 40;
-  this.reevaluate = false;
 
   this.maxHunger = randomNumber(500, 700);
   this.starvation = randomNumber(600, 800);
@@ -143,8 +137,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
     }
     if (
       this.state === "hungry" &&
-      board.foodPositions.length > 0 &&
-      !this.reevaluate
+      board.foodPositions.length > 0
     ) {
       this.pathForFood();
     }
@@ -192,18 +185,18 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
 
   this.multiply = function() {
     if (this.animalType === "rabbit") {
-      if (bunniesArray.length < this.max) {
+      if (bunniesArray.length < maxBunnies) {
         bunnyId++;
-        // if (!muted) {
-        //   pop.play();
-        // }
+        if (!muted) {
+          pop.play();
+        }
         bunniesArray.push(
-          new Animal("rabbit", this.col + 5, this.row, bunnyId, "yellow", 20)
+          new Animal("rabbit", this.col + 5, this.row, bunnyId, 20)
         );
       }
     } else if (this.animalType === "fox") {
       this.denCounter++;
-      if (this.denCounter > 500) {
+      if (this.denCounter > 100) {
         let dir = randomNumber(1, 2);
         if (foxArray.length < 10) {
           foxId++;
@@ -214,7 +207,6 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
                 this.col + 2,
                 this.row + 1,
                 foxId,
-                "yellow",
                 20,
                 "left"
               )
@@ -226,7 +218,6 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
                 this.col + 2,
                 this.row + 1,
                 foxId,
-                "yellow",
                 20,
                 "right"
               )
@@ -289,7 +280,7 @@ let Animal = function(animalType, x, y, id, color, speedModifier, direction) {
       possibleJumps.push("left");
     }
 
-    this.moveCounter += 50;
+    this.moveCounter += 100;
 
     if (this.moveCounter > 100) {
       if (this.row > this.denPath.y && possibleJumps.includes("up")) {
@@ -811,12 +802,12 @@ canvas.addEventListener(
     } else if (toolBox === "rabbit") {
       bunnyId++;
       bunniesArray.push(
-        new Animal("rabbit", mousePos.x, mousePos.y, bunnyId, "yellow", 20)
+        new Animal("rabbit", mousePos.x, mousePos.y, bunnyId, 20)
       );
     } else if (toolBox === "fox") {
       foxId++;
       foxArray.push(
-        new Animal("fox", mousePos.x, mousePos.y, foxId, "yellow", 20, "left")
+        new Animal("fox", mousePos.x, mousePos.y, foxId, 20, "left")
       );
     }
     renderBackground();
@@ -839,7 +830,6 @@ let bunniesArray = [
     randomNumber(30, 40),
     randomNumber(5, 10),
     1,
-    "yellow",
     20
   ),
   new Animal(
@@ -847,7 +837,6 @@ let bunniesArray = [
     randomNumber(30, 40),
     randomNumber(5, 10),
     2,
-    "yellow",
     20
   ),
   new Animal(
@@ -855,7 +844,6 @@ let bunniesArray = [
     randomNumber(30, 40),
     randomNumber(5, 10),
     3,
-    "yellow",
     20
   ),
   new Animal(
@@ -863,7 +851,6 @@ let bunniesArray = [
     randomNumber(30, 40),
     randomNumber(5, 10),
     4,
-    "yellow",
     20
   ),
   new Animal(
@@ -871,7 +858,6 @@ let bunniesArray = [
     randomNumber(30, 40),
     randomNumber(5, 10),
     5,
-    "yellow",
     20
   )
   
@@ -887,7 +873,6 @@ let bearArray = [
     randomNumber(25, 25),
     randomNumber(25, 25),
     50,
-    "yellow",
     20,
     "left"
   )
@@ -919,7 +904,7 @@ $("#showSliders").on("click", () => {
   if ($("#showSliders").attr("clicked") == "false") {
     console.log("HEY");
     $("#sliders").css("visibility", "visible");
-    $("#sliders").animate({ height: "400px" }, 500);
+    $("#sliders").animate({ height: "600px" }, 500);
     $("#showSliders").attr("clicked", "true");
   } else {
     $("#sliders").animate({ height: "5px" }, 500, function() {
@@ -928,19 +913,31 @@ $("#showSliders").on("click", () => {
     $("#showSliders").attr("clicked", "false");
   }
 });
+$("#playBtn").on("click", () => {
+  $(".splashScreen").fadeOut("slow", () => {
+    renderBackground();
 
+    $(".gameWrapper").fadeIn("slow", () => {
+      
+      startGame();
+    })
+  
+  });
+})
+$("#chaos").on("click", () => {
+  maxBunnies = 5000;
+})
 // let interval = setInterval(mainLoop, sliderVal / speedModifier);
 
 function startGame() {
   window.requestAnimationFrame(mainLoop)
 }
 
-// function updateSlider() {
-//   clearInterval(interval);
-//   let range = $("#range").val();
-//   sliderVal = range;
-//   interval = setInterval(mainLoop, sliderVal / speedModifier);
-// }
+function updateSlider() {
+
+  let range = $("#range").val();
+  sliderVal = range;
+}
 
 function pushTime() {
   time += 6;
@@ -953,7 +950,7 @@ setInterval(pushTime, 360000);
 frameCount = 0;
 function mainLoop() {
   frameCount+= 1;
-  if (frameCount < 1) {
+  if (frameCount < sliderVal) {
     window.requestAnimationFrame(mainLoop);
     return
   }
@@ -962,6 +959,7 @@ function mainLoop() {
  
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   initialize();
+  updateSlider();
   // updateSlider();
   board.season += 1;
 
