@@ -927,6 +927,11 @@ $("#playBtn").on("click", () => {
 $("#chaos").on("click", () => {
   maxBunnies = 5000;
 })
+$("#endSim").on("click", () => {
+  $(".gameWrapper").fadeOut("slow", () => {
+    $("#dashboard").fadeIn("slow")
+  })
+})
 // let interval = setInterval(mainLoop, sliderVal / speedModifier);
 
 function startGame() {
