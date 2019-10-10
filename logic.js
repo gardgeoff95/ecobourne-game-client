@@ -71,6 +71,7 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
   this.id = id;
   this.col = x;
   this.row = y;
+  this.winterGene = randomNumber(1, 2)
   this.speedModifier = speedModifier;
 
   this.state = "idle";
@@ -133,7 +134,7 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
     if (
       this.state === "idle" &&
       this.animalType === "fox" &&
-      this.preyEaten < 6
+      this.preyEaten < 15
     ) {
       this.preyBunnies();
     }
@@ -179,7 +180,7 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
             this.row === bunniesArray[i].row &&
             this.id != bunniesArray[i].id)
         ) {
-          if (this.babyTime > 100 && bunniesArray[i].babyTime > 100) {
+          if (this.babyTime > 300 && bunniesArray[i].babyTime > 300) {
             this.babyTime = 0;
 
             this.multiply();
@@ -205,7 +206,7 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
       this.denCounter++;
       if (this.denCounter > 100) {
         let dir = randomNumber(1, 2);
-        if (foxArray.length < 500) {
+        if (foxArray.length < 25) {
           foxId++;
           if (dir === 1) {
             foxArray.push(
@@ -435,7 +436,7 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
   };
   this.bearEat = function() {
     this.eating++;
-    console.log(this.eating)
+    console.log(this.eating);
     if (this.eating > 15) {
       board.foodPositions.splice(this.foodToSplice, 1);
       mapArray[this.closestFood.y][this.closestFood.x] = 0;
@@ -443,7 +444,6 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
 
       this.eating = 0;
       this.state = "idle";
-      
     }
   };
   this.bearBerries = function() {
@@ -459,8 +459,8 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
           board.foodPositions[i].yPos === this.col)
       ) {
         this.state = "eating";
-        this.closestFood.x = board.foodPositions[i].yPos
-        this.closestFood.y = board.foodPositions[i].xPos
+        this.closestFood.x = board.foodPositions[i].yPos;
+        this.closestFood.y = board.foodPositions[i].xPos;
         this.foodToSplice = i;
       }
     }
@@ -887,7 +887,7 @@ let bunniesArray = [
 let foxArray = [
   new Animal("fox", randomNumber(30, 40), randomNumber(20, 30), 4, 20, "left"),
   new Animal("fox", randomNumber(30, 40), randomNumber(40, 45), 6, 20, "left"),
-  
+
   new Animal("fox", randomNumber(70, 80), randomNumber(90, 95), 5, 20, "right")
 ];
 
@@ -944,11 +944,14 @@ $("#chaos").on("click", () => {
 });
 $("#endSim").on("click", () => {
   $(".gameWrapper").fadeOut("slow", () => {
-    stop = true;
+
 
     dashboard("#dashboard", popData);
+    dashboard("#dbStarvation", deathStarvation);
+    dashboard("#dbAge", deathAge);
+    dashboard("#dbPred", deathPred);
     d3.selectAll("text").attr("fill", "white");
-    $("#dashboard").fadeIn("slow");
+    $(".d3Wrapper").fadeIn("slow");
   });
 });
 
@@ -970,6 +973,12 @@ function newD3() {
     popData[d3Index].freq.rabbit = bunniesArray.length;
     popData[d3Index].freq.fox = foxArray.length;
     popData[d3Index].freq.bear = bearArray.length;
+
+    deathStarvation[d3Index].freq.rabbit = rdbStarvation;
+    deathStarvation[d3Index].freq.fox = fdbStarvation;
+    
+
+
   }
 }
 setInterval(newD3, 30000);
@@ -1352,8 +1361,8 @@ function dashboard(id, fData) {
     leg = legend(tF); // create the legend.
 }
 
-var popData = [
-  { State: "00:06", freq: { bear: 5, fox: 5, rabbit: 5 } },
+let popData = [
+  { State: "00:06", freq: { bear: 0, fox: 0, rabbit: 0 } },
   { State: "00:12", freq: { bear: 0, fox: 0, rabbit: 0 } },
   { State: "00:18", freq: { bear: 0, fox: 0, rabbit: 0 } },
   { State: "00:24", freq: { bear: 0, fox: 0, rabbit: 0 } },
@@ -1364,6 +1373,43 @@ var popData = [
   { State: "00:54", freq: { bear: 0, fox: 0, rabbit: 0 } },
   { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
 ];
+let deathStarvation = [
+  { State: "00:06", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:12", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:18", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:24", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:30", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:36", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:42", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:48", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:54", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
+];
+let deathAge = [
+  { State: "00:06", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:12", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:18", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:24", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:30", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:36", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:42", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:48", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:54", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
+];
+let deathPred = [
+  { State: "00:06", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:12", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:18", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:24", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:30", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:36", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:42", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:48", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "00:54", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
+];
+
 popData[d3Index].freq.rabbit = bunniesArray.length;
 popData[d3Index].freq.fox = foxArray.length;
 popData[d3Index].freq.bear = bearArray.length;

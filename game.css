@@ -94,8 +94,9 @@
   .gameWrapper{
     display: none;
   }
-  #dashboard{
+  .d3Wrapper{
     display: none;
+    color: white;
   }
   #endSim{
     width: 100px;
@@ -146,10 +147,9 @@ td{
 .bar{
   color: white
 }
-#dashboard{
+.d3Wrapper{
   position: absolute;
   top: 25%;
   left: 10%;
-  background-color: grey;
 
 }
