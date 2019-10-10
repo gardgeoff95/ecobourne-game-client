@@ -81,7 +81,11 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
   this.currentDirection = direction;
   this.upOrDown = "up";
 
+  this.repath = false;
   this.pathLength = 0;
+  this.vert;
+  this.horiz;
+  this.completedDirections = [];
 
   this.foodToSplice = null;
 
@@ -133,6 +137,14 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
     ) {
       this.preyBunnies();
     }
+    if (this.state === "idle" && this.animalType === "bear") {
+      this.preyBunnies();
+      this.bearBerries();
+    }
+    if (this.state === "eating" && this.animalType === "bear") {
+      this.bearEat();
+    }
+
     if (this.state === "hungry" && board.foodPositions.length > 0) {
       this.pathForFood();
     }
@@ -193,7 +205,7 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
       this.denCounter++;
       if (this.denCounter > 100) {
         let dir = randomNumber(1, 2);
-        if (foxArray.length < 10) {
+        if (foxArray.length < 500) {
           foxId++;
           if (dir === 1) {
             foxArray.push(
@@ -421,6 +433,38 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
 
     return;
   };
+  this.bearEat = function() {
+    this.eating++;
+    console.log(this.eating)
+    if (this.eating > 15) {
+      board.foodPositions.splice(this.foodToSplice, 1);
+      mapArray[this.closestFood.y][this.closestFood.x] = 0;
+      renderBackground();
+
+      this.eating = 0;
+      this.state = "idle";
+      
+    }
+  };
+  this.bearBerries = function() {
+    for (let i = 0; i < board.foodPositions.length; i++) {
+      if (
+        (board.foodPositions[i].yPos === this.col + 1 &&
+          board.foodPositions[i].xPos === this.row) ||
+        (board.foodPositions[i].yPos === this.col - 1 &&
+          board.foodPositions[i].xPos === this.row) ||
+        (board.foodPositions[i].xPos === this.row + 1 &&
+          board.foodPositions[i].yPos === this.col) ||
+        (board.foodPositions[i].xPos === this.row - 1 &&
+          board.foodPositions[i].yPos === this.col)
+      ) {
+        this.state = "eating";
+        this.closestFood.x = board.foodPositions[i].yPos
+        this.closestFood.y = board.foodPositions[i].xPos
+        this.foodToSplice = i;
+      }
+    }
+  };
   this.move = function() {
     if (this.animalType === "rabbit") {
       let possibleJumps = [];
@@ -557,27 +601,53 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
         this.moveCounter = 0;
       }
     } else if (this.animalType === "bear") {
-      this.moveCounter += 10;
-      if (this.pathLength < 10) {
-        if (this.currentDirection === "left" && this.col > 0) {
-          if (this.moveCounter > 100) {
-            this.col--;
-            this.pathLength++;
-            this.moveCounter = 0;
+      let possibleJumps = [];
+
+      if (this.repath) {
+        this.pathLength = 0;
+
+        if (this.col + 5 < board.maxTiles && this.currentDirection != "right") {
+          possibleJumps.push("right");
+        }
+        if (this.col - 5 > 0 && this.currentDirection != "left") {
+          possibleJumps.push("left");
+        }
+        if (this.row + 5 < board.maxTiles && this.currentDirection != "down") {
+          possibleJumps.push("down");
+        }
+        if (this.row - 5 > 0 && this.currentDirection != "up") {
+          possibleJumps.push("up");
+        }
+        console.log(possibleJumps);
+
+        this.currentDirection =
+          possibleJumps[Math.floor(Math.random() * possibleJumps.length)];
+
+        this.repath = false;
+      } else if (!this.repath) {
+        this.moveCounter += 100;
+        if (this.moveCounter > 100) {
+          switch (this.currentDirection) {
+            case "left":
+              this.col--;
+              break;
+            case "right":
+              this.col++;
+              break;
+            case "up":
+              this.row--;
+              break;
+            case "down":
+              this.row++;
+              break;
           }
-        } else if (
-          this.currentDirection === "right" &&
-          this.col < board.maxTiles
-        ) {
-          if (this.moveCounter > 100) {
-            this.col++;
-            this.pathLength++;
-            this.moveCounter = 0;
+          this.pathLength++;
+          this.moveCounter = 0;
+          if (this.pathLength > 9) {
+            this.completedDirections.push(this.currentDirection);
+            this.repath = true;
           }
         }
-      } else {
-        this.currentDirection = "right";
-        this.pathLength = 0;
       }
     }
 
@@ -807,11 +877,18 @@ let bunniesArray = [
   new Animal("rabbit", randomNumber(30, 40), randomNumber(5, 10), 2, 20),
   new Animal("rabbit", randomNumber(30, 40), randomNumber(5, 10), 3, 20),
   new Animal("rabbit", randomNumber(30, 40), randomNumber(5, 10), 4, 20),
-  new Animal("rabbit", randomNumber(30, 40), randomNumber(5, 10), 5, 20)
+  new Animal("rabbit", randomNumber(70, 80), randomNumber(40, 45), 5, 20),
+  new Animal("rabbit", randomNumber(70, 80), randomNumber(40, 45), 6, 20),
+  new Animal("rabbit", randomNumber(70, 80), randomNumber(40, 45), 7, 20),
+  new Animal("rabbit", randomNumber(50, 60), randomNumber(45, 55), 8, 20),
+  new Animal("rabbit", randomNumber(50, 55), randomNumber(40, 60), 9, 20),
+  new Animal("rabbit", randomNumber(45, 55), randomNumber(35, 70), 10, 20)
 ];
 let foxArray = [
-  new Animal("fox", randomNumber(30, 40), randomNumber(5, 10), 4, 20, "left"),
-  new Animal("fox", randomNumber(30, 40), randomNumber(5, 10), 5, 20, "right")
+  new Animal("fox", randomNumber(30, 40), randomNumber(20, 30), 4, 20, "left"),
+  new Animal("fox", randomNumber(30, 40), randomNumber(40, 45), 6, 20, "left"),
+  
+  new Animal("fox", randomNumber(70, 80), randomNumber(90, 95), 5, 20, "right")
 ];
 
 let bearArray = [
@@ -867,10 +944,9 @@ $("#chaos").on("click", () => {
 });
 $("#endSim").on("click", () => {
   $(".gameWrapper").fadeOut("slow", () => {
-  
     stop = true;
- 
-    dashboard("#dashboard", freqData);
+
+    dashboard("#dashboard", popData);
     d3.selectAll("text").attr("fill", "white");
     $("#dashboard").fadeIn("slow");
   });
@@ -888,12 +964,12 @@ function updateSlider() {
 }
 
 function newD3() {
-  console.log(d3Index)
+  console.log(d3Index);
   if (d3Index < 11) {
     d3Index++;
-    freqData[d3Index].freq.rabbit = bunniesArray.length;
-    freqData[d3Index].freq.fox = foxArray.length;
-    freqData[d3Index].freq.bear = bearArray.length;
+    popData[d3Index].freq.rabbit = bunniesArray.length;
+    popData[d3Index].freq.fox = foxArray.length;
+    popData[d3Index].freq.bear = bearArray.length;
   }
 }
 setInterval(newD3, 30000);
@@ -916,10 +992,9 @@ function mainLoop() {
   if (board.season === 12000) {
     renderBackground();
   }
-  if(!stop) {
+  if (!stop) {
     window.requestAnimationFrame(mainLoop);
   }
-
 }
 
 function dashboard(id, fData) {
@@ -1289,10 +1364,6 @@ var popData = [
   { State: "00:54", freq: { bear: 0, fox: 0, rabbit: 0 } },
   { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
 ];
-
-
-freqData[d3Index].freq.rabbit = bunniesArray.length;
-freqData[d3Index].freq.fox = foxArray.length;
-freqData[d3Index].freq.bear = bearArray.length;
-
-
+popData[d3Index].freq.rabbit = bunniesArray.length;
+popData[d3Index].freq.fox = foxArray.length;
+popData[d3Index].freq.bear = bearArray.length;
