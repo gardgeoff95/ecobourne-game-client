@@ -867,9 +867,11 @@ $("#chaos").on("click", () => {
 });
 $("#endSim").on("click", () => {
   $(".gameWrapper").fadeOut("slow", () => {
+  
     stop = true;
-    
+ 
     dashboard("#dashboard", freqData);
+    d3.selectAll("text").attr("fill", "white");
     $("#dashboard").fadeIn("slow");
   });
 });
@@ -886,6 +888,7 @@ function updateSlider() {
 }
 
 function newD3() {
+  console.log(d3Index)
   if (d3Index < 11) {
     d3Index++;
     freqData[d3Index].freq.rabbit = bunniesArray.length;
@@ -893,7 +896,7 @@ function newD3() {
     freqData[d3Index].freq.bear = bearArray.length;
   }
 }
-setInterval(newD3, 60000);
+setInterval(newD3, 30000);
 
 frameCount = 0;
 function mainLoop() {
@@ -903,7 +906,6 @@ function mainLoop() {
     return;
   }
   frameCount = 0;
-  console.log(bunniesArray);
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   initialize();
@@ -1275,7 +1277,7 @@ function dashboard(id, fData) {
     leg = legend(tF); // create the legend.
 }
 
-var freqData = [
+var popData = [
   { State: "00:06", freq: { bear: 5, fox: 5, rabbit: 5 } },
   { State: "00:12", freq: { bear: 0, fox: 0, rabbit: 0 } },
   { State: "00:18", freq: { bear: 0, fox: 0, rabbit: 0 } },
@@ -1287,8 +1289,10 @@ var freqData = [
   { State: "00:54", freq: { bear: 0, fox: 0, rabbit: 0 } },
   { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
 ];
+
+
 freqData[d3Index].freq.rabbit = bunniesArray.length;
 freqData[d3Index].freq.fox = foxArray.length;
 freqData[d3Index].freq.bear = bearArray.length;
 
-d3.selectAll("text").attr("fill", "white");
+
