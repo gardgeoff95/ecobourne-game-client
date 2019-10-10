@@ -139,3 +139,10 @@ rect:hover {  fill:blue; }
     align:right;
     width:50px;
 }
+td{
+  color:white
+}
+
+.bar{
+  color: white
+}
