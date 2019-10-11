@@ -18,7 +18,8 @@ let board = {
   tileHeight: 16,
   foodPositions: [],
   foxDenPositions: [],
-  season: 0
+  seasonCounter: 0,
+  season: "summer"
 };
 const FOX_DEN = 5;
 const GRASS_1 = 0;
@@ -71,7 +72,7 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
   this.id = id;
   this.col = x;
   this.row = y;
-  this.winterGene = randomNumber(1, 2)
+  this.winterGene = randomNumber(1, 2);
   this.speedModifier = speedModifier;
 
   this.state = "idle";
@@ -180,7 +181,7 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
             this.row === bunniesArray[i].row &&
             this.id != bunniesArray[i].id)
         ) {
-          if (this.babyTime > 300 && bunniesArray[i].babyTime > 300) {
+          if (this.babyTime > 150 && bunniesArray[i].babyTime > 150) {
             this.babyTime = 0;
 
             this.multiply();
@@ -235,7 +236,7 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
     } else if (this.animalType === "fox" && this.state != "den") {
       draw("image", foxImg, this.col, this.row);
     } else if (this.animalType === "bear") {
-      draw("image", bearImg, this.col, this.row);
+      draw("image", bearImg, this.col, this.row, null, null, null, true);
     }
   };
 
@@ -317,14 +318,7 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
   this.die = function() {
     if (this.animalType === "rabbit") {
       bunniesArray = bunniesArray.filter(bunny => bunny.id != this.id);
-      // console.log("another one bites the dust")
-      // console.log(bunniesArray.length)
     }
-    // for (let i = 0; i < bunniesArray.length; i++) {
-    //   if (this.id === bunniesArray[i].id) {
-    //     bunniesArray.splice(i, 1);
-    //   }
-    // }
   };
   this.preyBunnies = function() {
     for (let i = 0; i < bunniesArray.length; i++) {
@@ -449,11 +443,11 @@ let Animal = function(animalType, x, y, id, speedModifier, direction) {
   this.bearBerries = function() {
     for (let i = 0; i < board.foodPositions.length; i++) {
       if (
-        (board.foodPositions[i].yPos === this.col + 1 &&
+        (board.foodPositions[i].yPos === this.col + 2 &&
           board.foodPositions[i].xPos === this.row) ||
         (board.foodPositions[i].yPos === this.col - 1 &&
           board.foodPositions[i].xPos === this.row) ||
-        (board.foodPositions[i].xPos === this.row + 1 &&
+        (board.foodPositions[i].xPos === this.row + 2 &&
           board.foodPositions[i].yPos === this.col) ||
         (board.foodPositions[i].xPos === this.row - 1 &&
           board.foodPositions[i].yPos === this.col)
@@ -662,7 +656,7 @@ canvas.width = board.tileWidth * board.maxTiles;
 function randomNumber(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
-function draw(type, img = null, x, y, color, tile, row) {
+function draw(type, img = null, x, y, color, tile, row, bear) {
   if (type == "rect") {
     backGroundCtx.fillStyle = color;
     backGroundCtx.fillRect(
@@ -672,31 +666,46 @@ function draw(type, img = null, x, y, color, tile, row) {
       board.tileHeight
     );
   } else if (type === "image") {
-    ctx.drawImage(
-      img,
-      0,
-      0,
-      16,
-      16,
-      x * board.tileWidth,
-      y * board.tileHeight,
-      board.tileWidth,
-      board.tileHeight
-    );
+    if (!bear) {
+      ctx.drawImage(
+        img,
+        0,
+        0,
+        16,
+        16,
+        x * board.tileWidth,
+        y * board.tileHeight,
+        board.tileWidth,
+        board.tileHeight
+      );
+    } else if (bear) {
+      ctx.drawImage(
+        img,
+        0,
+        0,
+        16,
+        16,
+        x * board.tileWidth,
+        y * board.tileHeight,
+        32,
+        32
+      );
+
+    }
   } else if (type === "imageBack") {
     let tiles = [0, 16, 32];
-
-    backGroundCtx.drawImage(
-      img,
-      tile,
-      row,
-      16,
-      16,
-      x * board.tileWidth,
-      y * board.tileHeight,
-      board.tileWidth,
-      board.tileHeight
-    );
+    if (!bear)
+      backGroundCtx.drawImage(
+        img,
+        tile,
+        row,
+        16,
+        16,
+        x * board.tileWidth,
+        y * board.tileHeight,
+        board.tileWidth,
+        board.tileHeight
+      );
   }
 }
 
@@ -730,7 +739,7 @@ function createArray() {
 function renderBackground() {
   for (let y = 0; y < board.maxTiles; y++) {
     for (let x = 0; x < board.maxTiles; x++) {
-      if (board.season > 12000) {
+      if (board.season === "winter") {
         switch (mapArray[y][x]) {
           case GRASS_1:
             draw("imageBack", grassImg, x, y, null, 16, 0);
@@ -805,7 +814,7 @@ function addFood() {
     let y = randomNumber(1, board.maxTiles);
     if (mapArray[x][y] === 0) {
       mapArray[x][y] = 3;
-      board.foodPositions.push({ xPos: x, yPos: y, taken: false, uses: 5 });
+      board.foodPositions.push({ xPos: y, yPos: x, taken: false, uses: 5 });
       renderBackground();
     }
   }
@@ -873,6 +882,8 @@ function getMousePos(canvas, evt) {
   };
 }
 let bunniesArray = [
+  new Animal("rabbit", randomNumber(30, 40), randomNumber(5, 10), 1, 20),
+  new Animal("rabbit", randomNumber(30, 40), randomNumber(5, 10), 2, 20),
   new Animal("rabbit", randomNumber(30, 40), randomNumber(5, 10), 1, 20),
   new Animal("rabbit", randomNumber(30, 40), randomNumber(5, 10), 2, 20),
   new Animal("rabbit", randomNumber(30, 40), randomNumber(5, 10), 3, 20),
@@ -944,8 +955,6 @@ $("#chaos").on("click", () => {
 });
 $("#endSim").on("click", () => {
   $(".gameWrapper").fadeOut("slow", () => {
-
-
     dashboard("#dashboard", popData);
     dashboard("#dbStarvation", deathStarvation);
     dashboard("#dbAge", deathAge);
@@ -976,9 +985,6 @@ function newD3() {
 
     deathStarvation[d3Index].freq.rabbit = rdbStarvation;
     deathStarvation[d3Index].freq.fox = fdbStarvation;
-    
-
-
   }
 }
 setInterval(newD3, 30000);
@@ -996,9 +1002,15 @@ function mainLoop() {
   initialize();
   updateSlider();
   // updateSlider();
-  board.season += 1;
+  board.seasonCounter += 1;
+  console.log(board.seasonCounter);
+  if (board.seasonCounter % 200 === 0) {
+    board.season = "winter";
 
-  if (board.season === 12000) {
+    renderBackground();
+  }
+  if (board.seasonCounter % 400 === 0) {
+    board.season = "summer";
     renderBackground();
   }
   if (!stop) {
