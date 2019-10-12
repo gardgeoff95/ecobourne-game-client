@@ -40,7 +40,10 @@ let bdbStarvation = 0;
 let bdbAge = 0;
 let rdbStarvation = 0;
 let rdbAge = 0;
+
 let dbPred = 0;
+
+
 
 let maxBunnies = 200;
 let timeStampNum = 0;
@@ -61,10 +64,10 @@ let grassImg = new Image();
 let pop = new Audio("blop.wav");
 let d3Index = 0;
 
-grassImg.src = "grassTiles.png";
-bunnyImg.src = "rabbit.png";
-foxImg.src = "fox.png";
-bearImg.src = "bear.png";
+grassImg.src = "./game-images/grassTiles.png";
+bunnyImg.src = "./game-images/rabbit.png";
+foxImg.src = "./game-images/fox.png";
+bearImg.src = "./game-images/bear.png";
 
 database.ref(`/timestamps/${timeStampNum}`).set(time);
 let Animal = function(animalType, x, y, id, speedModifier, direction) {
@@ -985,6 +988,15 @@ function newD3() {
 
     deathStarvation[d3Index].freq.rabbit = rdbStarvation;
     deathStarvation[d3Index].freq.fox = fdbStarvation;
+    deathStarvation[d3Index].freq.bear = bdbStarvation;
+
+    deathAge[d3Index].freq.rabbit = rdbAge;
+    deathAge[d3Index].freq.fox = fdbAge;
+    deathAge [d3Index].freq.bear = bdbAge;
+
+    deathPred[d3Index].freq.rabbit = dbPred;
+ 
+
   }
 }
 setInterval(newD3, 30000);

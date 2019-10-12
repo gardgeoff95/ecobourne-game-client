@@ -1,9 +1,28 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, Menu } = require('electron')
 let win;
+let toolBar;
+function loadToolBar(title, file) {
+  let toolBar = new BrowserWindow({
+    width: 500,
+    height: 200,
+    title: title,
+    resizeable: false,
+    fullscreenable: false
+  })
+}
+
+
+
+
 function createWindow () {
    win = new BrowserWindow({
     width: 1600,
     height: 1080,
+    title: "Ecobourne",
+    icon: __dirname + "./ui-images/leaf.png",
+    resizeable: false,
+    fullscreenable: true,
+    darkTheme: true,
     webPreferences: {
       nodeIntegration: true
     }
@@ -12,6 +31,29 @@ function createWindow () {
   win.on("closed", () => {
     win = null;
   })
+  let menu = Menu.buildFromTemplate([
+    {
+      label:"File",
+      submenu : [
+        {label: "Developer Info",
+          click() {
+            loadToolBar("Dev Info")
+
+          }
+          
+        },
+        {label: "Options"},
+        {label: "Exit",
+          click() {
+            app.quit()
+          }
+        }
+      ]
+    }
+  ])
+  Menu.setApplicationMenu(menu)
+    
+    
 }
 app.on('ready', createWindow)
 app.on("window-all-closed", () => {
