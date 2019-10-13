@@ -1,14 +1,27 @@
 const { app, BrowserWindow, Menu } = require('electron')
+
 let win;
 let toolBar;
+let slider;
 function loadToolBar(title, file) {
   let toolBar = new BrowserWindow({
-    width: 500,
-    height: 200,
+    width: 700,
+    height: 500 ,
     title: title,
-    resizeable: false,
-    fullscreenable: false
+
+    frame: false,
+    webPreferences: {
+      nodeIntegration: true
+    }
+
+
   })
+  toolBar.webContents.openDevTools();
+  toolBar.loadFile("./toolbars/devs.html")
+}
+function loadSlider() {
+
+  
 }
 
 
@@ -21,11 +34,12 @@ function createWindow () {
     title: "Ecobourne",
     icon: __dirname + "./ui-images/leaf.png",
     resizeable: false,
-    fullscreenable: true,
+    fullscreen: true,
     darkTheme: true,
     webPreferences: {
       nodeIntegration: true
     }
+
   })
   win.loadFile('index.html')
   win.on("closed", () => {

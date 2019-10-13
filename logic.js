@@ -1437,3 +1437,5 @@ let deathPred = [
 popData[d3Index].freq.rabbit = bunniesArray.length;
 popData[d3Index].freq.fox = foxArray.length;
 popData[d3Index].freq.bear = bearArray.length;
+
+

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <script
+      src="https://kit.fontawesome.com/b5fadf32fe.js"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      if (typeof module === "object") {
+        window.module = module;
+        module = undefined;
+      }
+    </script>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="./css/dev.css" />
+    <script src="../jquery.js"></script>
+    <script src="./js/dev.js"></script>
+    <script>
+      if (window.module) module = window.module;
+    </script>
+  </head>
+  <body>
+    <div class="row">
+      <div class="col-md-12">
+        <nav>
+          <div id="navButtons">
+            <button class="nav" id="close">
+              <i id="close" class="nav fas fa-times  fa-2x"></i>
+            </button>
+            <button class="nav">
+              <i class="nav far fa-square fa-2x"></i>
+            </button>
+            <button class="nav">
+              <i class="nav fas fa-window-minimize fa-lg"></i>
+            </button>
+          </div>
+        </nav>
+      </div>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h3 id="title">The Team</h3>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div
+            class="btn-group btn-group-lg"
+            role="group"
+            aria-label="Basic example"
+          >
+            <button id="jamie" type="button" class="btn btn-secondary">
+              Jamie Barton
+            </button>
+            <button id="andy" type="button" class="btn btn-secondary">
+              Andy Ren
+            </button>
+            <button id="geoff" type="button" class="btn btn-secondary">
+              Geoffrey Gard
+            </button>
+            <button id="laura" type="button" class="btn btn-secondary">
+              Laura Salomon
+            </button>
+            <button id="morgan" type="button" class="btn btn-secondary">
+              Morgan Arnold
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class =row>
+        <div class="col-md-12">
+            <div class="card" style="width: 18rem;">
+                <div class="card-body">
+                  <h5 class="card-title">Jamie Barton</h5>
+                  <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
+                  <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                  <a href="#" class="card-link">Card link</a>
+                  <a href="#" class="card-link">Another link</a>
+                </div>
+              </div>
+
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
