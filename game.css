@@ -28,7 +28,7 @@ html::-webkit-scrollbar {
     top: 50px;
     position: fixed;
     z-index: 10;
-    right: 40px;
+    right: 60px;
     background-color: #222629;
     opacity: 0.8;
     width: 200px;
@@ -43,7 +43,7 @@ html::-webkit-scrollbar {
   #showSliders{
     position: fixed;
     z-index: 10;
-    right: 40px;
+    right: 60px;
     top: 5px;
     width: 200px;
     background-color: #222629;
@@ -111,12 +111,12 @@ html::-webkit-scrollbar {
     width: 100px;
     position: fixed;
     bottom: 20px;
-    right: 40px;
+    right: 60px;
     z-index: 1000;
     background-color: #222629;
   }
   #endSim:hover{
-    background-color: #7c8993;
+    background-color: #86c232;
   }
 
 

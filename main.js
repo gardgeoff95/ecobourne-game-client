@@ -4,9 +4,9 @@ let win;
 let toolBar;
 let slider;
 function loadToolBar(title, file) {
-  let toolBar = new BrowserWindow({
+  toolBar = new BrowserWindow({
     width: 700,
-    height: 500 ,
+    height: 600 ,
     title: title,
 
     frame: false,
@@ -20,6 +20,15 @@ function loadToolBar(title, file) {
   toolBar.loadFile("./toolbars/devs.html")
 }
 function loadSlider() {
+  slider = new BrowserWindow({
+    width: 700,
+    height: 145,
+    frame: false,
+    webPreferences: {
+      nodeIntegration: true
+    }
+  }) 
+  slider.loadFile("./toolbars/slider.html")
 
   
 }
@@ -56,13 +65,23 @@ function createWindow () {
           }
           
         },
-        {label: "Options"},
         {label: "Exit",
           click() {
             app.quit()
           }
         }
       ]
+    },
+    {
+      label:"View",
+      submenu : [
+        {label: "Speed",
+        click() {
+          loadSlider()
+        }}
+      ]
+
+
     }
   ])
   Menu.setApplicationMenu(menu)
