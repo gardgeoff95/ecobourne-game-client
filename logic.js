@@ -10,22 +10,102 @@ var firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 let database = firebase.database();
+function pushBunny(color) {
+  bunnyId++;
+  bunniesArray.push(
+    new Animal(
+      "rabbit",
+      randomNumber(1, 99),
+      randomNumber(1, 99),
+      bunnyId,
+      20,
+      null,
+      color
+    )
+  );
+}
 
+function pushFox(direction) {
+  foxId++
+  foxArray.push(new Animal("fox", randomNumber(1, 99), randomNumber(1,99), foxId, 20, direction))
+}
 database.ref("chat/message").on("value", snap => {
-  if (snap.val().toLowerCase() === "rabbit") {
-    console.log("RABBIT")
+  console.log(snap.val());
+  switch (snap.val()) {
+    case "!bunny-blue":
+      pushBunny("blue");
+      break;
+    case "!bunny-pink":
+      pushBunny("pink");
+      break;
+    case "!bunny-brown":
+      pushBunny("brown");
+      break;
+    case "!bunny-yellow":
+      pushBunny("yellow");
+      break;
+    case "!fox-right":
+      pushFox("right");
+      break;
+    case "!fox-left":
+      pushFox("left");
+      break;
+    
   }
-  
-})
+});
 let board = {
   maxTiles: 100,
-  tileWidth: 16,
-  tileHeight: 16,
+  tileWidth: 18,
+  tileHeight: 18,
   foodPositions: [],
   foxDenPositions: [],
   seasonCounter: 0,
   season: "summer"
 };
+(function($) {
+  $.dragScroll = function(options) {
+    var settings = $.extend({
+      scrollVertical: true,
+      scrollHorizontal: true,
+      cursor: null
+    }, options);
+
+    var clicked = false,
+      clickY, clickX;
+
+    var getCursor = function() {
+      if (settings.cursor) return settings.cursor;
+      if (settings.scrollVertical && settings.scrollHorizontal) return 'move';
+      if (settings.scrollVertical) return 'row-resize';
+      if (settings.scrollHorizontal) return 'col-resize';
+    }
+
+    var updateScrollPos = function(e, el) {
+      $('html').css('cursor', getCursor());
+      var $el = $(el);
+      settings.scrollVertical && $el.scrollTop($el.scrollTop() + (clickY - e.pageY));
+      settings.scrollHorizontal && $el.scrollLeft($el.scrollLeft() + (clickX - e.pageX));
+    }
+
+    $(document).on({
+      'mousemove': function(e) {
+        clicked && updateScrollPos(e, this);
+      },
+      'mousedown': function(e) {
+        clicked = true;
+        clickY = e.pageY;
+        clickX = e.pageX;
+      },
+      'mouseup': function() {
+        clicked = false;
+        $('html').css('cursor', 'auto');
+      }
+    });
+  }
+}(jQuery))
+
+$.dragScroll();
+
 const FOX_DEN = 5;
 const GRASS_1 = 0;
 const GRASS_2 = 2;
@@ -60,6 +140,10 @@ let bearId = 30;
 let mapArray = new Array();
 let bunnieCount = 0;
 let bunnyImg = new Image();
+let yellowBunny = new Image();
+let blueBunny = new Image();
+let pinkBunny = new Image();
+let brownBunny = new Image();
 let foxImg = new Image();
 let bearImg = new Image();
 let grassImg = new Image();
@@ -67,24 +151,19 @@ let pop = new Audio("blop.wav");
 let d3Index = 0;
 
 grassImg.src = "./game-images/grassTiles.png";
+blueBunny.src = "./game-images/blueRabbit.png";
+brownBunny.src = "./game-images/brownRabbit.png";
+pinkBunny.src = "./game-images/pinkRabbit.png";
+yellowBunny.src = "./game-images/yellowRabbit.png";
 bunnyImg.src = "./game-images/rabbit.png";
 foxImg.src = "./game-images/fox.png";
 bearImg.src = "./game-images/bear.png";
 
-let Animal = function(
-  animalType,
-  x,
-  y,
-  id,
-  speedModifier,
-  direction,
-  winterGene
-) {
+let Animal = function(animalType, x, y, id, speedModifier, direction, color) {
   this.animalType = animalType;
   this.id = id;
   this.col = x;
   this.row = y;
-  this.winterGene = winterGene;
   this.speedModifier = speedModifier;
 
   this.state = "idle";
@@ -134,12 +213,25 @@ let Animal = function(
   this.stateManager = function() {
     if (this.animalType === "rabbit" && bunniesArray.length < 12) {
       bunnyId++;
-      bunniesArray.push(new Animal("rabbit", this.col + 5, this.row -1, bunnyId, 20)); 
+      bunniesArray.push(
+        new Animal("rabbit", this.col + 5, this.row - 1, bunnyId, 20)
+      );
       bunnyId++;
-      bunniesArray.push(new Animal("rabbit", this.col + 5, this.row -1, bunnyId, 20)); 
-    }  
+      bunniesArray.push(
+        new Animal("rabbit", this.col + 5, this.row - 1, bunnyId, 20)
+      );
+    }
     if (bearArray.length === 0 && board.season === "summer") {
-      bearArray.push(new Animal("bear", randomNumber(1, 99), randomNumber(1,99), bearId, 20, "right"))
+      bearArray.push(
+        new Animal(
+          "bear",
+          randomNumber(1, 99),
+          randomNumber(1, 99),
+          bearId,
+          20,
+          "right"
+        )
+      );
     }
 
     if (
@@ -248,7 +340,7 @@ let Animal = function(
           pop.play();
         }
         bunniesArray.push(
-          new Animal("rabbit", this.col + 5, this.row, bunnyId, 20)
+          new Animal("rabbit", this.col + 5, this.row, bunnyId, 20, null, color)
         );
       }
     } else if (this.animalType === "fox") {
@@ -281,7 +373,23 @@ let Animal = function(
   //draws the animal to the canvas every frame
   this.draw = function() {
     if (this.animalType === "rabbit") {
-      draw("image", bunnyImg, this.col, this.row);
+      switch (color) {
+        case "yellow":
+          draw("image", yellowBunny, this.col, this.row);
+          break;
+        case "pink":
+          draw("image", pinkBunny, this.col, this.row);
+          break;
+        case "brown":
+          draw("image", brownBunny, this.col, this.row);
+          break;
+        case "blue":
+          draw("image", blueBunny, this.col, this.row);
+          break;
+        default:
+          draw("image", bunnyImg, this.col, this.row);
+          break;
+      }
     } else if (this.animalType === "fox" && this.state != "den") {
       draw("image", foxImg, this.col, this.row);
     } else if (this.animalType === "bear" && this.state != "den") {
@@ -343,9 +451,8 @@ let Animal = function(
         if (this.animalType === "bear" && this.bearFood < 10) {
           bearArray = [];
           bearId++;
-          bdbStarvation ++
+          bdbStarvation++;
           writeData("bear", "starvation");
-        
         }
         this.state = "den";
       } else {
@@ -497,7 +604,6 @@ let Animal = function(
     this.bearFood++;
     this.eating = 0;
     this.state = "idle";
-    
   };
   this.bearBerries = function() {
     for (let i = 0; i < board.foodPositions.length; i++) {
@@ -511,7 +617,6 @@ let Animal = function(
         (board.foodPositions[i].xPos === this.row - 1 &&
           board.foodPositions[i].yPos === this.col)
       ) {
-      
         this.state = "eating";
         this.closestFood.x = board.foodPositions[i].yPos;
         this.closestFood.y = board.foodPositions[i].xPos;
@@ -651,10 +756,9 @@ let Animal = function(
           fdbStarvation++;
           writeData("fox", "starvation");
         } else if (this.timeAlive > 2000) {
-          foxArray = foxArray.filter(fox => fox.id != this.id)
+          foxArray = foxArray.filter(fox => fox.id != this.id);
           fdbAge++;
           writeData("fox", "age");
-
         }
 
         this.moveCounter = 0;
@@ -711,7 +815,7 @@ let Animal = function(
         if (this.timeAlive > 1000) {
           bearArray = [];
           bearId++;
-          bdbAge ++ 
+          bdbAge++;
           writeData("bear", "age");
           bearArray.push(
             new Animal(
@@ -816,18 +920,7 @@ function createArray() {
     }
   }
 }
-function snap() {
-  if (bunniesArray.length > 20) {
-    for (i = 0; i < bunniesArray.length; i++) {
-      console.log(bunniesArray[i].winterGene);
-      if (bunniesArray[i].winterGene === 1) {
-        bunniesArray = bunniesArray.splice(i, 1);
-        snappedBunnies++;
-        console.log(snappedBunnies);
-      }
-    }
-  }
-}
+
 function renderBackground() {
   for (let y = 0; y < board.maxTiles; y++) {
     for (let x = 0; x < board.maxTiles; x++) {
@@ -988,141 +1081,21 @@ function getMousePos(canvas, evt) {
   };
 }
 let bunniesArray = [
-  new Animal(
-    "rabbit",
-    randomNumber(5, 25),
-    (10, 15),
-    1,
-    20,
-    null,
-    randomNumber(1, 7)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(5, 25),
-    (10, 15),
-    2,
-    20,
-    null,
-    randomNumber(1, 7)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(5, 25),
-    (10, 15),
-    3,
-    20,
-    null,
-    randomNumber(1, 7)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(5, 25),
-    (10, 15),
-    1,
-    20,
-    null,
-    randomNumber(1, 7)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(5, 25),
-    (10, 15),
-    2,
-    20,
-    null,
-    randomNumber(1, 7)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(5, 25),
-    (10, 15),
-    3,
-    20,
-    null,
-    randomNumber(1, 7)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(40, 35),
-    (45, 55),
-    4,
-    20,
-    null,
-    randomNumber(1, 7)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(25, 55),
-    (35, 65),
-    5,
-    20,
-    null,
-    randomNumber(1, 7)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(80, 90),
-    (70, 99),
-    6,
-    20,
-    null,
-    randomNumber(1, 7)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(65, 99),
-    (50, 99),
-    7,
-    20,
-    null,
-    randomNumber(1, 7)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(77, 22),
-    (45, 75),
-    8,
-    20,
-    null,
-    randomNumber(1, 7)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(70, 85),
-    (10, 15),
-    9,
-    20,
-    null,
-    randomNumber(1, 7)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(70, 85),
-    (10, 15),
-    10,
-    20,
-    null,
-    randomNumber(70, 85)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(70, 85),
-    (10, 15),
-    11,
-    20,
-    null,
-    randomNumber(1, 7)
-  ),
-  new Animal(
-    "rabbit",
-    randomNumber(70, 90),
-    (10, 15),
-    12,
-    20,
-    null,
-    randomNumber(1, 7)
-  )
+  new Animal("rabbit", randomNumber(5, 25), (10, 15), 1, 20, null),
+  new Animal("rabbit", randomNumber(5, 25), (10, 15), 2, 20, null),
+  new Animal("rabbit", randomNumber(5, 25), (10, 15), 3, 20, null),
+  new Animal("rabbit", randomNumber(5, 25), (10, 15), 1, 20, null),
+  new Animal("rabbit", randomNumber(5, 25), (10, 15), 2, 20, null),
+  new Animal("rabbit", randomNumber(5, 25), (10, 15), 3, 20, null),
+  new Animal("rabbit", randomNumber(40, 35), (45, 55), 4, 20, null),
+  new Animal("rabbit", randomNumber(25, 55), (35, 65), 5, 20, null),
+  new Animal("rabbit", randomNumber(80, 90), (70, 99), 6, 20, null),
+  new Animal("rabbit", randomNumber(65, 99), (50, 99), 7, 20, null),
+  new Animal("rabbit", randomNumber(77, 22), (45, 75), 8, 20, null),
+  new Animal("rabbit", randomNumber(70, 85), (10, 15), 9, 20, null),
+  new Animal("rabbit", randomNumber(70, 85), (10, 15), 10, 20, null),
+  new Animal("rabbit", randomNumber(70, 85), (10, 15), 11, 20, null),
+  new Animal("rabbit", randomNumber(70, 90), (10, 15), 12, 20, null)
 ];
 let foxArray = [
   new Animal("fox", randomNumber(5, 10), (20, 35), 1, 20, "right"),
@@ -1170,13 +1143,11 @@ $("#showSliders").on("click", () => {
   }
 });
 $("#playBtn").on("click", () => {
- 
   $(".splashScreen").fadeOut("slow", () => {
-
     renderBackground();
 
     $(".gameWrapper").fadeIn("slow", () => {
-      d3Interval = setInterval(newD3, 60000);
+      d3Interval = setInterval(newD3, 30000);
       startGame();
       writeData("rabbit", null, true);
       writeData("bear", null, true);
@@ -1187,7 +1158,6 @@ $("#playBtn").on("click", () => {
       writeData("rabbit", "age");
       writeData("rabbit", "starvation");
       writeData("rabbit", "predator");
-     
     });
   });
 });
@@ -1196,7 +1166,7 @@ $("#chaos").on("click", () => {
 });
 $("#endSim").on("click", () => {
   stop = true;
-  clearInterval(d3Interval)
+  clearInterval(d3Interval);
   $(".gameWrapper").fadeOut("slow", () => {
     dashboard("#dashboard", popData);
     dashboard("#dbStarvation", deathStarvation);
@@ -1206,9 +1176,21 @@ $("#endSim").on("click", () => {
     $(".d3Wrapper").fadeIn("slow");
   });
 });
-$("#reset").on("click", () => {
+$("#view").on("click", () => {
+  if ($("#view").text() === "Global View") {
+    $("#view").text("Local View") 
+    board.tileWidth = 16;
+    board.tileHeight =16;
+    renderBackground();
+  } else {
+    $("#view").text("Global View")
+    board.tileWidth = 32;
+    board.tileHeight = 32;
+    renderBackground();
+  }
 
-})
+  
+});
 // let interval = setInterval(mainLoop, sliderVal / speedModifier);
 
 function startGame() {
@@ -1242,7 +1224,6 @@ function newD3() {
 
 frameCount = 0;
 function mainLoop() {
-
   frameCount += 1;
   if (frameCount < sliderVal) {
     window.requestAnimationFrame(mainLoop);
@@ -1256,11 +1237,19 @@ function mainLoop() {
   // updateSlider();
   board.seasonCounter += 1;
   if (foxArray.length < 3) {
-    foxId ++
-    foxArray.push(new Animal("fox", randomNumber(1, 99), randomNumber(1, 99), foxId, 20, "right"));
-
+    foxId++;
+    foxArray.push(
+      new Animal(
+        "fox",
+        randomNumber(1, 99),
+        randomNumber(1, 99),
+        foxId,
+        20,
+        "right"
+      )
+    );
   }
-  
+
   if (board.seasonCounter % 800 === 0) {
     board.season = "winter";
 
@@ -1683,7 +1672,7 @@ popData[d3Index].freq.rabbit = bunniesArray.length;
 popData[d3Index].freq.fox = foxArray.length;
 popData[d3Index].freq.bear = bearArray.length;
 
-deathStarvation[d3Index].freq.rabbit = rdbStarvation
+deathStarvation[d3Index].freq.rabbit = rdbStarvation;
 deathStarvation[d3Index].freq.fox = fdbStarvation;
 deathStarvation[d3Index].freq.bear = bdbStarvation;
 

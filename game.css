@@ -2,6 +2,12 @@ html {
     -ms-overflow-style: none;  
     scrollbar-width: none; 
 }
+button:active{
+  outline:none
+}
+button:focus{
+  outline: none;
+}
 html::-webkit-scrollbar { 
     display: none;  
 }
@@ -18,6 +24,18 @@ html::-webkit-scrollbar {
     position: absolute;
    left: 25px;
     
+  }
+  #view{
+    position:fixed;
+    left: 32px;
+    bottom:10px;
+    z-index: 10000;
+    width: 200px;
+    background-color: #222629
+  
+  }
+  #view:hover{
+    background: #6B6E70
   }
  
   #navigation{
@@ -108,7 +126,7 @@ html::-webkit-scrollbar {
     color: white;
   }
   #endSim{
-    width: 100px;
+    width: 200px;
     position: fixed;
     bottom: 20px;
     right: 60px;
