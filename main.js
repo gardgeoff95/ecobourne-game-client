@@ -41,7 +41,7 @@ function createWindow () {
     width: 1600,
     height: 1080,
     title: "ecobourne",
-    icon: __dirname + "/ui-images/leaf.png",
+    icon: __dirname + "/ui-images/leaf.ico",
     resizeable: false,
     fullscreen: true,
     darkTheme: true,
@@ -65,6 +65,12 @@ function createWindow () {
           }
           
         },
+        {label: "Restart",
+          click() {
+            app.relaunch();
+            app.quit();
+          }
+          },
         {label: "Exit",
           click() {
             app.quit()
