@@ -40,8 +40,8 @@ function createWindow () {
    win = new BrowserWindow({
     width: 1600,
     height: 1080,
-    title: "Ecobourne",
-    icon: __dirname + "./ui-images/leaf.png",
+    title: "ecobourne",
+    icon: __dirname + "/ui-images/leaf.png",
     resizeable: false,
     fullscreen: true,
     darkTheme: true,

@@ -11,7 +11,12 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 let database = firebase.database();
 
-database.ref("/").set("");
+database.ref("chat/message").on("value", snap => {
+  if (snap.val().toLowerCase() === "rabbit") {
+    console.log("RABBIT")
+  }
+  
+})
 let board = {
   maxTiles: 100,
   tileWidth: 16,
@@ -31,16 +36,14 @@ const ctx = canvas.getContext("2d");
 const backgroundCanvas = document.getElementById("background");
 const backGroundCtx = backgroundCanvas.getContext("2d");
 const speedSlider = $("#range");
-
 //counter variables for firebase
-
 let fdbStarvation = 0;
 let fdbAge = 0;
 let bdbStarvation = 0;
 let bdbAge = 0;
 let rdbStarvation = 0;
 let rdbAge = 0;
-
+let d3Interval;
 let dbPred = 0;
 let snappedBunnies = 0;
 let maxBunnies = 200;
@@ -68,7 +71,6 @@ bunnyImg.src = "./game-images/rabbit.png";
 foxImg.src = "./game-images/fox.png";
 bearImg.src = "./game-images/bear.png";
 
-database.ref(`/timestamps/${timeStampNum}`).set(time);
 let Animal = function(
   animalType,
   x,
@@ -98,7 +100,7 @@ let Animal = function(
   this.vert;
   this.horiz;
   this.completedDirections = [];
-
+  this.bearFood = 0;
   this.foodToSplice = null;
 
   //Counter variables for bunny
@@ -127,15 +129,26 @@ let Animal = function(
     y: null
   };
 
-  //Function called every time the startGame interval is called
+  //Function called every time the mainloop is called
 
   this.stateManager = function() {
+    if (this.animalType === "rabbit" && bunniesArray.length < 12) {
+      bunnyId++;
+      bunniesArray.push(new Animal("rabbit", this.col + 5, this.row -1, bunnyId, 20)); 
+      bunnyId++;
+      bunniesArray.push(new Animal("rabbit", this.col + 5, this.row -1, bunnyId, 20)); 
+    }  
+    if (bearArray.length === 0 && board.season === "summer") {
+      bearArray.push(new Animal("bear", randomNumber(1, 99), randomNumber(1,99), bearId, 20, "right"))
+    }
+
     if (
       this.animalType === "bear" &&
       board.season == "summer" &&
       this.state === "den"
     ) {
       console.log("CALLED");
+      this.bearFood = 0;
       this.state = "idle";
     }
 
@@ -215,7 +228,7 @@ let Animal = function(
             this.row === bunniesArray[i].row &&
             this.id != bunniesArray[i].id)
         ) {
-          if (this.babyTime > 125 && bunniesArray[i].babyTime > 125) {
+          if (this.babyTime > 200 && bunniesArray[i].babyTime > 200) {
             this.babyTime = 0;
 
             this.multiply();
@@ -229,7 +242,7 @@ let Animal = function(
   this.multiply = function() {
     if (this.animalType === "rabbit") {
       if (bunniesArray.length < maxBunnies) {
-        writeData("rabbit", null, true)
+        writeData("rabbit", null, true);
         bunnyId++;
         if (!muted) {
           pop.play();
@@ -241,7 +254,6 @@ let Animal = function(
     } else if (this.animalType === "fox") {
       this.denCounter++;
       if (this.denCounter > 100) {
-        writeData("fox", null, true)
         let dir = randomNumber(1, 2);
         if (foxArray.length < 25) {
           foxId++;
@@ -254,6 +266,7 @@ let Animal = function(
               new Animal("fox", this.col + 2, this.row + 1, foxId, 20, "right")
             );
           }
+          writeData("fox", null, true);
           this.state = "idle";
           this.preyEaten = 0;
           this.denCounter = 0;
@@ -291,7 +304,6 @@ let Animal = function(
   //paths to the above den
   this.returnToDen = function() {
     let possibleJumps = [];
-
     if (
       this.row + 1 < board.maxTiles &&
       grassArray.includes(mapArray[this.row + 1][this.col])
@@ -328,6 +340,13 @@ let Animal = function(
         this.denPath.y + 1 === this.row ||
         this.denPath.y - 1 === this.row
       ) {
+        if (this.animalType === "bear" && this.bearFood < 10) {
+          bearArray = [];
+          bearId++;
+          bdbStarvation ++
+          writeData("bear", "starvation");
+        
+        }
         this.state = "den";
       } else {
         if (this.animalType === "fox") {
@@ -358,6 +377,7 @@ let Animal = function(
   this.die = function() {
     if (this.animalType === "rabbit") {
       bunniesArray = bunniesArray.filter(bunny => bunny.id != this.id);
+      writeData("rabbit", null, true);
     }
   };
   this.preyBunnies = function() {
@@ -374,6 +394,7 @@ let Animal = function(
         (this.row === bunniesArray[i].row && this.col === bunniesArray[i].col)
       ) {
         this.preyEaten++;
+        this.bearFood++;
 
         bunniesArray[i].state = "dead";
 
@@ -382,6 +403,7 @@ let Animal = function(
         );
         dbPred++;
         writeData("rabbit", "predator");
+        writeData("rabbit", null, true);
 
         if (this.preyEaten === 5 && this.animalType === "fox") {
           this.state = "tired";
@@ -413,7 +435,7 @@ let Animal = function(
     // this.hunger++;
     this.babyTime++;
     this.timeAlive++;
-    if (this.timeAlive > randomNumber(800, 900)) {
+    if (this.timeAlive > randomNumber(1000, 1100)) {
       rdbAge++;
       writeData("rabbit", "oldAge");
 
@@ -469,14 +491,13 @@ let Animal = function(
     return;
   };
   this.bearEat = function() {
-    this.eating++;
-
     board.foodPositions.splice(this.foodToSplice, 1);
     mapArray[this.closestFood.y][this.closestFood.x] = 0;
     renderBackground();
-
+    this.bearFood++;
     this.eating = 0;
     this.state = "idle";
+    
   };
   this.bearBerries = function() {
     for (let i = 0; i < board.foodPositions.length; i++) {
@@ -490,6 +511,7 @@ let Animal = function(
         (board.foodPositions[i].xPos === this.row - 1 &&
           board.foodPositions[i].yPos === this.col)
       ) {
+      
         this.state = "eating";
         this.closestFood.x = board.foodPositions[i].yPos;
         this.closestFood.y = board.foodPositions[i].xPos;
@@ -543,7 +565,7 @@ let Animal = function(
         }
 
         this.timeAlive++;
-        if (this.timeAlive > randomNumber(800, 900)) {
+        if (this.timeAlive > randomNumber(1000, 1100)) {
           rdbAge++;
           writeData("rabbit", "age");
           this.state = "dead";
@@ -580,7 +602,7 @@ let Animal = function(
       if (grassArray.includes(mapArray[this.row][this.col - 1])) {
         possibleJumps.push("left");
       }
-
+      this.timeAlive++;
       this.moveCounter += 100;
       if (this.moveCounter > 100) {
         if (
@@ -628,12 +650,17 @@ let Animal = function(
           foxArray = foxArray.filter(fox => fox.id != this.id);
           fdbStarvation++;
           writeData("fox", "starvation");
+        } else if (this.timeAlive > 2000) {
+          foxArray = foxArray.filter(fox => fox.id != this.id)
+          fdbAge++;
+          writeData("fox", "age");
+
         }
 
         this.moveCounter = 0;
       }
     } else if (this.animalType === "bear") {
-      console.log(this.timeAlive)
+      console.log(this.timeAlive);
       let possibleJumps = [];
 
       if (this.repath) {
@@ -657,7 +684,7 @@ let Animal = function(
 
         this.repath = false;
       } else if (!this.repath) {
-        this.timeAlive++
+        this.timeAlive++;
         this.moveCounter += 100;
         if (this.moveCounter > 100) {
           switch (this.currentDirection) {
@@ -682,9 +709,20 @@ let Animal = function(
           }
         }
         if (this.timeAlive > 1000) {
-          bearArray = []
-          bearId ++
-          bearArray.push(new Animal("bear", randomNumber(1, 99), randomNumber(1, 99), bearId, 20, "right"))
+          bearArray = [];
+          bearId++;
+          bdbAge ++ 
+          writeData("bear", "age");
+          bearArray.push(
+            new Animal(
+              "bear",
+              randomNumber(1, 99),
+              randomNumber(1, 99),
+              bearId,
+              20,
+              "right"
+            )
+          );
         }
       }
     }
@@ -760,7 +798,7 @@ function createArray() {
     for (let y = 0; y < board.maxTiles; y++) {
       const rando = randomNumber(1, 2000);
 
-      if (rando <= 2) {
+      if (rando <= 2 && x > 0 && x < 99) {
         mapArray[x][y] = FOX_DEN;
         board.foxDenPositions.push({ xPos: x, yPos: y, taken: false });
       } else if (rando <= 5) {
@@ -845,9 +883,9 @@ function writeData(animal, deathby, pop) {
       database.ref("rabbits/deaths/starvation").set(rdbStarvation);
     } else if (deathby === "predator") {
       database.ref("rabbits/deaths/predator").set(dbPred);
-    } else if (pop){
+    } else if (pop) {
       database.ref("rabbits/population/size").set(bunniesArray.length);
-    }else {
+    } else {
       database.ref("rabbits/deaths/oldAge").set(rdbAge);
     }
   } else if (animal === "fox") {
@@ -855,17 +893,17 @@ function writeData(animal, deathby, pop) {
       database.ref("foxes/deaths/starvation").set(fdbStarvation);
     } else if (pop) {
       database.ref("foxes/population/size").set(foxArray.length);
-    }else {
+    } else {
       database.ref("foxes/deaths/oldAge").set(fdbAge);
     }
     //fox death logic to db
   } else if (animal === "bear") {
     if (deathby === "starvation") {
-      database.ref("bears/deaths/starvation").set();
-    } else if (deathyby == "age") {
-      database.ref("bears/death/age").set()
+      database.ref("bears/deaths/starvation").set(bdbStarvation);
+    } else if (deathby == "age") {
+      database.ref("bears/death/age").set(bdbAge);
     } else if (pop) {
-      database.ref("bears/population/size").set(bearArray.length);
+      database.ref("bears/population/size").set(1);
     }
   }
 }
@@ -889,11 +927,11 @@ function click(event) {
 }
 $("#audio").on("click", function() {
   if (!muted) {
-    $("#audio").attr("src", "speakerMuted.png");
+    $("#audio").attr("src", "./ui-images/speakerMuted.png");
     muted = true;
   } else {
     muted = false;
-    $("#audio").attr("src", "speaker.png");
+    $("#audio").attr("src", "./ui-images/speaker.png");
   }
 });
 $(".icons").on("click", function() {
@@ -904,7 +942,7 @@ canvas.addEventListener(
   "click",
   function(evt) {
     var mousePos = getMousePos(canvas, evt);
-    console.log(toolBox)
+    console.log(toolBox);
 
     if (toolBox === "grass1") {
       mapArray[mousePos.y][mousePos.x] = GRASS_1;
@@ -1048,6 +1086,42 @@ let bunniesArray = [
     20,
     null,
     randomNumber(1, 7)
+  ),
+  new Animal(
+    "rabbit",
+    randomNumber(70, 85),
+    (10, 15),
+    9,
+    20,
+    null,
+    randomNumber(1, 7)
+  ),
+  new Animal(
+    "rabbit",
+    randomNumber(70, 85),
+    (10, 15),
+    10,
+    20,
+    null,
+    randomNumber(70, 85)
+  ),
+  new Animal(
+    "rabbit",
+    randomNumber(70, 85),
+    (10, 15),
+    11,
+    20,
+    null,
+    randomNumber(1, 7)
+  ),
+  new Animal(
+    "rabbit",
+    randomNumber(70, 90),
+    (10, 15),
+    12,
+    20,
+    null,
+    randomNumber(1, 7)
   )
 ];
 let foxArray = [
@@ -1096,12 +1170,24 @@ $("#showSliders").on("click", () => {
   }
 });
 $("#playBtn").on("click", () => {
+ 
   $(".splashScreen").fadeOut("slow", () => {
+
     renderBackground();
 
     $(".gameWrapper").fadeIn("slow", () => {
-      setInterval(newD3, 60000);
+      d3Interval = setInterval(newD3, 60000);
       startGame();
+      writeData("rabbit", null, true);
+      writeData("bear", null, true);
+      writeData("fox", null, true);
+      writeData("fox", "starvation");
+      writeData("bear", "starvation");
+      writeData("bear", "age");
+      writeData("rabbit", "age");
+      writeData("rabbit", "starvation");
+      writeData("rabbit", "predator");
+     
     });
   });
 });
@@ -1109,6 +1195,8 @@ $("#chaos").on("click", () => {
   maxBunnies = 5000;
 });
 $("#endSim").on("click", () => {
+  stop = true;
+  clearInterval(d3Interval)
   $(".gameWrapper").fadeOut("slow", () => {
     dashboard("#dashboard", popData);
     dashboard("#dbStarvation", deathStarvation);
@@ -1118,7 +1206,9 @@ $("#endSim").on("click", () => {
     $(".d3Wrapper").fadeIn("slow");
   });
 });
+$("#reset").on("click", () => {
 
+})
 // let interval = setInterval(mainLoop, sliderVal / speedModifier);
 
 function startGame() {
@@ -1152,6 +1242,7 @@ function newD3() {
 
 frameCount = 0;
 function mainLoop() {
+
   frameCount += 1;
   if (frameCount < sliderVal) {
     window.requestAnimationFrame(mainLoop);
@@ -1164,10 +1255,14 @@ function mainLoop() {
   updateSlider();
   // updateSlider();
   board.seasonCounter += 1;
+  if (foxArray.length < 3) {
+    foxId ++
+    foxArray.push(new Animal("fox", randomNumber(1, 99), randomNumber(1, 99), foxId, 20, "right"));
 
+  }
+  
   if (board.seasonCounter % 800 === 0) {
     board.season = "winter";
-    snap();
 
     renderBackground();
   }
@@ -1536,54 +1631,64 @@ function dashboard(id, fData) {
 }
 
 let popData = [
-  { State: "00:06", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:12", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:18", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:24", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:30", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:36", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:42", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:48", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:54", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
+  { State: "00:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "02:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "03:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "04:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "05:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "06:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "07:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "08:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "09:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
 ];
 let deathStarvation = [
-  { State: "00:06", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:12", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:18", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:24", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:30", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:36", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:42", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:48", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:54", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
+  { State: "00:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "02:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "03:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "04:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "05:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "06:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "07:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "08:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "09:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
 ];
 let deathAge = [
-  { State: "00:06", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:12", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:18", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:24", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:30", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:36", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:42", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:48", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:54", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
+  { State: "00:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "02:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "03:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "04:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "05:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "06:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "07:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "08:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "09:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
 ];
 let deathPred = [
-  { State: "00:06", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:12", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:18", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:24", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:30", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:36", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:42", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:48", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "00:54", freq: { bear: 0, fox: 0, rabbit: 0 } },
-  { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
+  { State: "00:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "01:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "02:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "03:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "04:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "05:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "06:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "07:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "08:00", freq: { bear: 0, fox: 0, rabbit: 0 } },
+  { State: "09:00", freq: { bear: 0, fox: 0, rabbit: 0 } }
 ];
 
 popData[d3Index].freq.rabbit = bunniesArray.length;
 popData[d3Index].freq.fox = foxArray.length;
 popData[d3Index].freq.bear = bearArray.length;
+
+deathStarvation[d3Index].freq.rabbit = rdbStarvation
+deathStarvation[d3Index].freq.fox = fdbStarvation;
+deathStarvation[d3Index].freq.bear = bdbStarvation;
+
+deathAge[d3Index].freq.rabbit = rdbAge;
+deathAge[d3Index].freq.fox = fdbAge;
+deathAge[d3Index].freq.bear = bdbAge;
+
+deathPred[d3Index].freq.rabbit = dbPred;
