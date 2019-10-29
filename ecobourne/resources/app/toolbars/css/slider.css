@@ -1,0 +1,86 @@
+body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+html,
+body,
+* {
+  -webkit-user-select: none;
+  -webkit-app-region: drag;
+
+  font-family: inherit;
+
+}
+html {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  border-radius: 5px;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+body {
+  color: white;
+  background-color: #424a50;
+  opacity: 0.9;
+  border: 2px solid black;
+
+}
+input {
+    -webkit-app-region: no-drag;
+}
+.nav {
+    /* width: 50px; */
+    /* height: 50px; */
+    padding: 5px;
+    float: right !important;
+    height: 50px;
+    -webkit-app-region: no-drag;
+    
+}
+i{
+    color: white;
+}
+
+
+nav{
+    height: 50px;
+
+    background:#222629;
+
+ 
+}
+button, input[type="submit"], input[type="reset"] {
+	background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	outline: inherit;
+}
+button:active{
+    outline: none;
+
+}
+button:focus{
+    outline: none
+
+}
+button:hover{
+   background: #86c232
+}
+.btn {
+    -webkit-app-region: no-drag;
+    background: #222629
+}
+.btn:hover{
+    background:#86c232
+}
+.wrapper{
+    padding: 10px;
+}

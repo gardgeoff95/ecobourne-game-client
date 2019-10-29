@@ -1,0 +1,206 @@
+html {
+    -ms-overflow-style: none;  
+    scrollbar-width: none; 
+}
+button:active{
+  outline:none
+}
+button:focus{
+  outline: none;
+}
+html::-webkit-scrollbar { 
+    display: none;  
+}
+*{
+    outline: none;
+  }
+  
+  body {
+    background-color: #222629;
+       overflow-y: scroll;
+       overflow-x: scroll;
+  }
+  canvas {
+    position: absolute;
+   left: 25px;
+    
+  }
+  #view{
+    position:fixed;
+    left: 32px;
+    bottom:10px;
+    z-index: 10000;
+    width: 200px;
+    background-color: #222629
+  
+  }
+  #view:hover{
+    background: #6B6E70
+  }
+ 
+  #navigation{
+    position: fixed;
+    z-index: 1000
+  }
+  #sliders{
+    top: 50px;
+    position: fixed;
+    z-index: 10;
+    right: 60px;
+    background-color: #222629;
+    opacity: 0.8;
+    width: 200px;
+    padding: 10px;
+    height: 0px;
+    visibility: hidden;
+    color: #cbcccc;
+    border: 3px solid black;
+    border-radius: 5px;
+    text-align: center
+  }
+  #showSliders{
+    position: fixed;
+    z-index: 10;
+    right: 60px;
+    top: 5px;
+    width: 200px;
+    background-color: #222629;
+  
+  }
+  
+  #showSliders:hover{
+    background-color: #7c8993
+    
+  }
+  
+  .icons{
+  
+    width: 32px;
+    height: 32px;
+  }
+  .iconButton{
+    background-color: transparent;
+    border: none;
+    height : 50px;
+    width: 50px;
+  }
+  .iconButton:focus{
+    outline: none;
+    background-color: #6B6E70;
+    border: 2px solid black;
+    border-radius: 5px;
+  }
+  .navHeaders{
+    margin-top: 20px;
+    border-bottom: 2px solid #6B6E70;
+  }
+  #range{
+  
+      direction: rtl
+    
+  }
+  #audio{
+    width: 36px;
+    height: 36px;
+  }
+  
+  #audioButton{
+    position: fixed;
+    left : 20px;
+    z-index: 10;
+    background-color: transparent;
+    border: none;
+  
+  }
+  #audioButton:focus{
+    outline: none;
+  
+  
+  }
+ 
+  .gameWrapper{
+    display: none;
+  }
+  .d3Wrapper{
+    display: none;
+    color: white;
+  }
+  #endSim{
+    width: 200px;
+    position: fixed;
+    bottom: 20px;
+    right: 60px;
+    z-index: 1000;
+    background-color: #222629;
+  }
+  #endSim:hover{
+    background-color: #86c232;
+  }
+
+
+/* path {  stroke: #fff; } */
+path:hover {  opacity:0.9; }
+rect:hover {  fill:blue; }
+.axis {  font: 10px sans-serif; }
+.legend tr{    border-bottom:1px solid grey; }
+.legend tr:first-child{    border-top:1px solid grey; }
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {  display: none; }
+.legend{
+    margin-bottom:76px;
+    display:inline-block;
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+.legend td{
+    padding:4px 5px;
+    vertical-align:bottom;
+}
+.legendFreq, .legendPerc{
+    align:right;
+    width:50px;
+}
+td{
+  color:white
+}
+
+.bar{
+  color: white
+}
+.d3Wrapper{
+  position: absolute;
+  top: 25%;
+  left: 10%;
+
+}
+#reset{
+  position: fixed; 
+  outline: none;
+  background: #86c232;
+  box-shadow: inset 0 0 5px green;
+  border-radius: 25px;
+  border: none;
+  width: 100px;
+  height: 50px;
+  color: white;
+
+  top: 20px;
+  right: 20px;
+}
+#reset:hover{
+  background: #86c232;
+
+}
+#reset:focus{
+  outline: none;
+}
+#reset:active{
+  outline: none;
+}
